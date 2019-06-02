@@ -888,34 +888,41 @@ void TileMap::update_cell_bitmask(int p_x, int p_y) {
 						mask |= TileSet::BIND_BOTTOMRIGHT;
 					}
 				} else {
-					if (tile_set->is_tile_bound(id, get_cell(p_x - 1, p_y - 1))) {
+					#define autotile_check(bind, c_x, c_y) tile_set->autotile_is_touching(bind, id, get_cell(c_x, c_y), is_cell_x_flipped(c_x, c_y), is_cell_y_flipped(c_x, c_y), is_cell_transposed(c_x, c_y))
+					if (autotile_check(TileSet::BIND_BOTTOMRIGHT, p_x - 1, p_y - 1)) {
 						mask |= TileSet::BIND_TOPLEFT;
 					}
-					if (tile_set->is_tile_bound(id, get_cell(p_x + 1, p_y - 1))) {
+					if (autotile_check(TileSet::BIND_BOTTOMLEFT, p_x + 1, p_y - 1)) {
 						mask |= TileSet::BIND_TOPRIGHT;
 					}
-					if (tile_set->is_tile_bound(id, get_cell(p_x - 1, p_y + 1))) {
+					if (autotile_check(TileSet::BIND_TOPRIGHT, p_x - 1, p_y + 1)) {
 						mask |= TileSet::BIND_BOTTOMLEFT;
 					}
-					if (tile_set->is_tile_bound(id, get_cell(p_x + 1, p_y + 1))) {
+					if (autotile_check(TileSet::BIND_TOPLEFT, p_x + 1, p_y + 1)) {
 						mask |= TileSet::BIND_BOTTOMRIGHT;
 					}
+					#undef autotile_check
 				}
-				if (tile_set->is_tile_bound(id, get_cell(p_x, p_y - 1))) {
+				#define autotile_check(bind, c_x, c_y) tile_set->autotile_is_touching(bind, id, get_cell(c_x, c_y), is_cell_x_flipped(c_x, c_y), is_cell_y_flipped(c_x, c_y), is_cell_transposed(c_x, c_y))
+				if (autotile_check(TileSet::BIND_BOTTOM, p_x, p_y - 1)) {
 					mask |= TileSet::BIND_TOP;
 				}
-				if (tile_set->is_tile_bound(id, get_cell(p_x - 1, p_y))) {
+				if (autotile_check(TileSet::BIND_RIGHT, p_x - 1, p_y)) {
 					mask |= TileSet::BIND_LEFT;
 				}
 				mask |= TileSet::BIND_CENTER;
-				if (tile_set->is_tile_bound(id, get_cell(p_x + 1, p_y))) {
+				if (autotile_check(TileSet::BIND_LEFT, p_x + 1, p_y)) {
 					mask |= TileSet::BIND_RIGHT;
 				}
-				if (tile_set->is_tile_bound(id, get_cell(p_x, p_y + 1))) {
+				if (autotile_check(TileSet::BIND_TOP, p_x, p_y + 1)) {
 					mask |= TileSet::BIND_BOTTOM;
 				}
+				#undef autotile_check
 			}
-			Vector2 coord = tile_set->autotile_get_subtile_for_bitmask(id, mask, this, Vector2(p_x, p_y));
+
+			uint16_t final_mask = tile_set->autotile_final_bitmask(id, mask,  is_cell_x_flipped(p_x, p_y), is_cell_y_flipped(p_x, p_y), is_cell_transposed(p_x, p_y));
+
+			Vector2 coord = tile_set->autotile_get_subtile_for_bitmask(id, final_mask, this, Vector2(p_x, p_y));
 			E->get().autotile_coord_x = (int)coord.x;
 			E->get().autotile_coord_y = (int)coord.y;
 

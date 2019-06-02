@@ -31,6 +31,7 @@
 #include "tile_set.h"
 #include "core/array.h"
 #include "core/engine.h"
+#include "core/method_bind_ext.gen.inc"
 
 bool TileSet::_set(const StringName &p_name, const Variant &p_value) {
 
@@ -68,7 +69,11 @@ bool TileSet::_set(const StringName &p_name, const Variant &p_value) {
 			tile_set_tile_mode(id, AUTO_TILE);
 	} else if (what.left(9) == "autotile/") {
 		what = what.right(9);
-		if (what == "bitmask_mode")
+		if (what == "exclude_self")
+			tile_map[id].autotile_data.exclude_self = (bool)p_value;
+		else if (what == "associations")
+			tile_map[id].autotile_data.associations = p_value;
+		else if (what == "bitmask_mode")
 			autotile_set_bitmask_mode(id, (BitmaskMode)((int)p_value));
 		else if (what == "icon_coordinate")
 			autotile_set_icon_coordinate(id, p_value);
@@ -205,7 +210,11 @@ bool TileSet::_get(const StringName &p_name, Variant &r_ret) const {
 		r_ret = tile_get_tile_mode(id);
 	else if (what.left(9) == "autotile/") {
 		what = what.right(9);
-		if (what == "bitmask_mode")
+		if (what == "exclude_self")
+			r_ret = tile_map[id].autotile_data.exclude_self;
+		else if (what == "associations")
+			r_ret = tile_map[id].autotile_data.associations;
+		else if (what == "bitmask_mode")
 			r_ret = autotile_get_bitmask_mode(id);
 		else if (what == "icon_coordinate")
 			r_ret = autotile_get_icon_coordinate(id);
@@ -313,6 +322,8 @@ void TileSet::_get_property_list(List<PropertyInfo> *p_list) const {
 			p_list->push_back(PropertyInfo(Variant::ARRAY, pre + "autotile/navpoly_map", PROPERTY_HINT_NONE, "", PROPERTY_USAGE_NOEDITOR | PROPERTY_USAGE_INTERNAL));
 			p_list->push_back(PropertyInfo(Variant::ARRAY, pre + "autotile/priority_map", PROPERTY_HINT_NONE, "", PROPERTY_USAGE_NOEDITOR | PROPERTY_USAGE_INTERNAL));
 			p_list->push_back(PropertyInfo(Variant::ARRAY, pre + "autotile/z_index_map", PROPERTY_HINT_NONE, "", PROPERTY_USAGE_NOEDITOR | PROPERTY_USAGE_INTERNAL));
+			p_list->push_back(PropertyInfo(Variant::POOL_INT_ARRAY, pre + "autotile/associations", PROPERTY_HINT_NONE, "", PROPERTY_USAGE_DEFAULT));
+			p_list->push_back(PropertyInfo(Variant::BOOL, pre + "autotile/exclude_self", PROPERTY_HINT_NONE, "", PROPERTY_USAGE_DEFAULT));
 		} else if (tile_get_tile_mode(id) == ATLAS_TILE) {
 			p_list->push_back(PropertyInfo(Variant::VECTOR2, pre + "autotile/icon_coordinate", PROPERTY_HINT_NONE, "", PROPERTY_USAGE_NOEDITOR | PROPERTY_USAGE_INTERNAL));
 			p_list->push_back(PropertyInfo(Variant::VECTOR2, pre + "autotile/tile_size", PROPERTY_HINT_NONE, "", PROPERTY_USAGE_NOEDITOR | PROPERTY_USAGE_INTERNAL));
@@ -341,6 +352,85 @@ void TileSet::create_tile(int p_id) {
 	tile_map[p_id].autotile_data = AutotileData();
 	_change_notify("");
 	emit_changed();
+}
+
+uint16_t TileSet::autotile_final_bitmask(int p_id, uint16_t p_flag, bool p_flip_x, bool p_flip_y, bool p_transpose) {
+	uint16_t translated_mask = autotile_translate_bitmask(p_flag, p_flip_x, p_flip_y, p_transpose);
+	return translated_mask;
+}
+
+uint16_t TileSet::autotile_translate_bitmask(uint16_t p_flag, bool p_flip_x, bool p_flip_y, bool p_transpose) {
+	if(!p_flip_x && !p_flip_y && !p_transpose) {
+		return p_flag;
+	}
+	uint16_t *ptp = memnew_arr(uint16_t, 257);
+	for(int i = 0; i <= 8; ++i){
+		ptp[1 << i] = 1 << i;
+	}
+	if(p_transpose) {
+		SWAP(ptp[BIND_RIGHT], ptp[BIND_TOP]);
+		SWAP(ptp[BIND_BOTTOMRIGHT], ptp[BIND_TOPLEFT]);
+		SWAP(ptp[BIND_LEFT], ptp[BIND_BOTTOM]);
+		if(!p_flip_x) {
+			SWAP(ptp[BIND_TOPLEFT], ptp[BIND_TOPRIGHT]);
+			SWAP(ptp[BIND_LEFT], ptp[BIND_RIGHT]);
+			SWAP(ptp[BIND_BOTTOMLEFT], ptp[BIND_BOTTOMRIGHT]);
+		}
+		if(!p_flip_y) {
+			SWAP(ptp[BIND_TOPLEFT], ptp[BIND_BOTTOMLEFT]);
+			SWAP(ptp[BIND_TOP], ptp[BIND_BOTTOM]);
+			SWAP(ptp[BIND_TOPRIGHT], ptp[BIND_BOTTOMRIGHT]);
+		}
+	}
+	else {
+		if(p_flip_x) {
+			SWAP(ptp[BIND_TOPLEFT], ptp[BIND_TOPRIGHT]);
+			SWAP(ptp[BIND_LEFT], ptp[BIND_RIGHT]);
+			SWAP(ptp[BIND_BOTTOMLEFT], ptp[BIND_BOTTOMRIGHT]);
+		}
+		if(p_flip_y) {
+			SWAP(ptp[BIND_TOPLEFT], ptp[BIND_BOTTOMLEFT]);
+			SWAP(ptp[BIND_TOP], ptp[BIND_BOTTOM]);
+			SWAP(ptp[BIND_TOPRIGHT], ptp[BIND_BOTTOMRIGHT]);
+		}
+	}
+	uint16_t result = 0;
+	for(int i = 0; i <= 8; ++i) {
+		if(p_flag & (1 << i)) {
+				result |= ptp[1 << i];
+		}
+	}
+	memdelete_arr(ptp);
+	return result;
+}
+
+bool TileSet::autotile_is_touching(uint32_t p_current_bind, int p_current_id, int p_target_id, bool p_flip_x, bool p_flip_y, bool p_transpose) {
+	bool has_target = false;
+	if(!tile_map[p_current_id].autotile_data.exclude_self && p_current_id == p_target_id) {
+		has_target = true;
+	}
+	else {
+		PoolVector<int> cp = tile_map[p_current_id].autotile_data.associations;
+		for(int i = 0; i < cp.size(); ++i) {
+			if(cp[i] == p_target_id){
+				has_target = true;
+				break;
+			}
+		}
+	}
+	if(has_target) {
+		if(!tile_map.has(p_target_id) || tile_get_tile_mode(p_target_id) == SINGLE_TILE) {
+			return true;
+		}
+		else {
+			uint16_t translated_bind = autotile_translate_bitmask(p_current_bind, p_flip_x, p_flip_y, p_transpose);
+			uint16_t ignore_mask = autotile_get_bitmask(p_target_id, autotile_get_icon_coordinate(p_target_id));
+			return translated_bind & (~ignore_mask);
+		}
+	}
+	else {
+		return false;
+	}
 }
 
 void TileSet::autotile_set_bitmask_mode(int p_id, BitmaskMode p_mode) {
@@ -584,11 +674,15 @@ const Map<Vector2, uint32_t> &TileSet::autotile_get_bitmask_map(int p_id) {
 		return tile_map[p_id].autotile_data.flags;
 }
 
+Vector2 TileSet::_gdscript_autotile_get_subtile_for_bitmask(int p_id, uint16_t bitmask) {
+	return autotile_get_subtile_for_bitmask(p_id, bitmask, NULL, Vector2());
+}
+
 Vector2 TileSet::autotile_get_subtile_for_bitmask(int p_id, uint16_t p_bitmask, const Node *p_tilemap_node, const Vector2 &p_tile_location) {
 
 	ERR_FAIL_COND_V(!tile_map.has(p_id), Vector2());
 	//First try to forward selection to script
-	if (p_tilemap_node->get_class_name() == "TileMap") {
+	if (p_tilemap_node != NULL && p_tilemap_node->get_class_name() == "TileMap") {
 		if (get_script_instance() != NULL) {
 			if (get_script_instance()->has_method("_forward_subtile_selection")) {
 				Variant ret = get_script_instance()->call("_forward_subtile_selection", p_id, p_bitmask, p_tilemap_node, p_tile_location);
@@ -1084,6 +1178,8 @@ void TileSet::_bind_methods() {
 	ClassDB::bind_method(D_METHOD("autotile_get_light_occluder", "id", "coord"), &TileSet::autotile_get_light_occluder);
 	ClassDB::bind_method(D_METHOD("autotile_set_navigation_polygon", "id", "navigation_polygon", "coord"), &TileSet::autotile_set_navigation_polygon);
 	ClassDB::bind_method(D_METHOD("autotile_get_navigation_polygon", "id", "coord"), &TileSet::autotile_get_navigation_polygon);
+	ClassDB::bind_method(D_METHOD("autotile_get_subtile_for_bitmask", "tile_id", "bitmask"), &TileSet::_gdscript_autotile_get_subtile_for_bitmask);
+	ClassDB::bind_method(D_METHOD("autotile_is_touching", "relative_bind", "current_id", "target_id", "flip_x", "flip_y", "transpose"), &TileSet::autotile_is_touching);
 	ClassDB::bind_method(D_METHOD("autotile_set_bitmask", "id", "bitmask", "flag"), &TileSet::autotile_set_bitmask);
 	ClassDB::bind_method(D_METHOD("autotile_get_bitmask", "id", "coord"), &TileSet::autotile_get_bitmask);
 	ClassDB::bind_method(D_METHOD("autotile_set_bitmask_mode", "id", "mode"), &TileSet::autotile_set_bitmask_mode);
@@ -1161,4 +1257,5 @@ void TileSet::_bind_methods() {
 }
 
 TileSet::TileSet() {
+
 }

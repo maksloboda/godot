@@ -97,6 +97,8 @@ public:
 		int spacing;
 		Vector2 icon_coord;
 		Map<Vector2, uint32_t> flags;
+		PoolVector<int> associations;
+		bool exclude_self;
 		Map<Vector2, Ref<OccluderPolygon2D> > occluder_map;
 		Map<Vector2, Ref<NavigationPolygon> > navpoly_map;
 		Map<Vector2, int> priority_map;
@@ -104,10 +106,11 @@ public:
 
 		// Default size to prevent invalid value
 		explicit AutotileData() :
-				bitmask_mode(BITMASK_2X2),
+				bitmask_mode(BITMASK_3X3),
 				size(64, 64),
 				spacing(0),
-				icon_coord(0, 0) {}
+				icon_coord(0, 0),
+				exclude_self(false) {}
 	};
 
 private:
@@ -146,6 +149,7 @@ protected:
 	Array _tile_get_shapes(int p_id) const;
 	Array _get_tiles_ids() const;
 	void _decompose_convex_shape(Ref<Shape2D> p_shape);
+	Vector2 _gdscript_autotile_get_subtile_for_bitmask(int p_id, uint16_t bitmask);
 
 	static void _bind_methods();
 
@@ -194,6 +198,11 @@ public:
 	void autotile_set_bitmask(int p_id, Vector2 p_coord, uint32_t p_flag);
 	uint32_t autotile_get_bitmask(int p_id, Vector2 p_coord);
 	const Map<Vector2, uint32_t> &autotile_get_bitmask_map(int p_id);
+
+	bool autotile_is_touching(uint32_t p_current_bind, int p_current_id, int p_target_id, bool p_flip_x, bool p_flip_y, bool p_transpose);
+	uint16_t autotile_translate_bitmask(uint16_t p_flag, bool p_flip_x, bool p_flip_y, bool p_transpose);
+	uint16_t autotile_final_bitmask(int p_id, uint16_t p_flag, bool p_flip_x, bool p_flip_y, bool p_transpose);
+
 	Vector2 autotile_get_subtile_for_bitmask(int p_id, uint16_t p_bitmask, const Node *p_tilemap_node = NULL, const Vector2 &p_tile_location = Vector2());
 
 	void tile_set_shape(int p_id, int p_shape_id, const Ref<Shape2D> &p_shape);
