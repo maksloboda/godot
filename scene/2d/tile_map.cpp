@@ -858,6 +858,11 @@ void TileMap::update_cell_bitmask(int p_x, int p_y) {
 	Map<PosKey, Cell>::Element *E = tile_map.find(p);
 	if (E != NULL) {
 		int id = get_cell(p_x, p_y);
+
+		if (!tile_set->has_tile(id)) {
+			return;
+		}
+
 		if (tile_set->tile_get_tile_mode(id) == TileSet::AUTO_TILE) {
 			uint16_t mask = 0;
 			if (tile_set->autotile_get_bitmask_mode(id) == TileSet::BITMASK_2X2) {

@@ -535,7 +535,6 @@ void TileSet::tile_set_tile_mode(int p_id, TileMode p_tile_mode) {
 }
 
 TileSet::TileMode TileSet::tile_get_tile_mode(int p_id) const {
-
 	ERR_FAIL_COND_V(!tile_map.has(p_id), SINGLE_TILE);
 	return tile_map[p_id].tile_mode;
 }
