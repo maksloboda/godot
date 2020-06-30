@@ -1,7 +1,0 @@
-# SCsub
-
-Import('env')
-
-cpp_list = ["custom_text_edit.cpp", "register_types.cpp"]
-
-env.add_source_files(env.modules_sources, cpp_list)

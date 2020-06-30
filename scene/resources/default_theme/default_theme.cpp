@@ -464,51 +464,51 @@ void fill_default_theme(Ref<Theme> &theme, const Ref<Font> &default_font, const 
 	theme->set_constant("completion_scroll_width", "TextEdit", 3);
 	theme->set_constant("line_spacing", "TextEdit", 4 * scale);
 
-	// CustomTextEdit
+	// TextremeTextEdit
 
-	theme->set_stylebox("normal", "CustomTextEdit", make_stylebox(tree_bg_png, 3, 3, 3, 3, 0, 0, 0, 0));
-	theme->set_stylebox("focus", "CustomTextEdit", focus);
-	theme->set_stylebox("read_only", "CustomTextEdit", make_stylebox(tree_bg_disabled_png, 4, 4, 4, 4, 0, 0, 0, 0));
-	theme->set_stylebox("completion", "CustomTextEdit", make_stylebox(tree_bg_png, 3, 3, 3, 3, 0, 0, 0, 0));
+	theme->set_stylebox("normal", "TextremeTextEdit", make_stylebox(tree_bg_png, 3, 3, 3, 3, 0, 0, 0, 0));
+	theme->set_stylebox("focus", "TextremeTextEdit", focus);
+	theme->set_stylebox("read_only", "TextremeTextEdit", make_stylebox(tree_bg_disabled_png, 4, 4, 4, 4, 0, 0, 0, 0));
+	theme->set_stylebox("completion", "TextremeTextEdit", make_stylebox(tree_bg_png, 3, 3, 3, 3, 0, 0, 0, 0));
 
-	theme->set_icon("tab", "CustomTextEdit", make_icon(tab_png));
-	theme->set_icon("space", "CustomTextEdit", make_icon(space_png));
-	theme->set_icon("folded", "CustomTextEdit", make_icon(arrow_right_png));
-	theme->set_icon("fold", "CustomTextEdit", make_icon(arrow_down_png));
+	theme->set_icon("tab", "TextremeTextEdit", make_icon(tab_png));
+	theme->set_icon("space", "TextremeTextEdit", make_icon(space_png));
+	theme->set_icon("folded", "TextremeTextEdit", make_icon(arrow_right_png));
+	theme->set_icon("fold", "TextremeTextEdit", make_icon(arrow_down_png));
 
-	theme->set_font("font", "CustomTextEdit", default_font);
+	theme->set_font("font", "TextremeTextEdit", default_font);
 
-	theme->set_color("background_color", "CustomTextEdit", Color(0, 0, 0, 0));
-	theme->set_color("completion_background_color", "CustomTextEdit", Color(0.17, 0.16, 0.2));
-	theme->set_color("completion_selected_color", "CustomTextEdit", Color(0.26, 0.26, 0.27));
-	theme->set_color("completion_existing_color", "CustomTextEdit", Color(0.87, 0.87, 0.87, 0.13));
-	theme->set_color("completion_scroll_color", "CustomTextEdit", control_font_color_pressed);
-	theme->set_color("completion_font_color", "CustomTextEdit", Color(0.67, 0.67, 0.67));
-	theme->set_color("font_color", "CustomTextEdit", control_font_color);
-	theme->set_color("font_color_selected", "CustomTextEdit", Color(0, 0, 0));
-	theme->set_color("font_color_readonly", "CustomTextEdit", Color(control_font_color.r, control_font_color.g, control_font_color.b, 0.5f));
-	theme->set_color("selection_color", "CustomTextEdit", font_color_selection);
-	theme->set_color("mark_color", "CustomTextEdit", Color(1.0, 0.4, 0.4, 0.4));
-	theme->set_color("bookmark_color", "CustomTextEdit", Color(0.08, 0.49, 0.98));
-	theme->set_color("breakpoint_color", "CustomTextEdit", Color(0.8, 0.8, 0.4, 0.2));
-	theme->set_color("executing_line_color", "CustomTextEdit", Color(0.2, 0.8, 0.2, 0.4));
-	theme->set_color("code_folding_color", "CustomTextEdit", Color(0.8, 0.8, 0.8, 0.8));
-	theme->set_color("current_line_color", "CustomTextEdit", Color(0.25, 0.25, 0.26, 0.8));
-	theme->set_color("caret_color", "CustomTextEdit", control_font_color);
-	theme->set_color("caret_background_color", "CustomTextEdit", Color(0, 0, 0));
-	theme->set_color("symbol_color", "CustomTextEdit", control_font_color_hover);
-	theme->set_color("brace_mismatch_color", "CustomTextEdit", Color(1, 0.2, 0.2));
-	theme->set_color("line_number_color", "CustomTextEdit", Color(0.67, 0.67, 0.67, 0.4));
-	theme->set_color("safe_line_number_color", "CustomTextEdit", Color(0.67, 0.78, 0.67, 0.6));
-	theme->set_color("function_color", "CustomTextEdit", Color(0.4, 0.64, 0.81));
-	theme->set_color("member_variable_color", "CustomTextEdit", Color(0.9, 0.31, 0.35));
-	theme->set_color("number_color", "CustomTextEdit", Color(0.92, 0.58, 0.2));
-	theme->set_color("word_highlighted_color", "CustomTextEdit", Color(0.8, 0.9, 0.9, 0.15));
+	theme->set_color("background_color", "TextremeTextEdit", Color(0, 0, 0, 0));
+	theme->set_color("completion_background_color", "TextremeTextEdit", Color(0.17, 0.16, 0.2));
+	theme->set_color("completion_selected_color", "TextremeTextEdit", Color(0.26, 0.26, 0.27));
+	theme->set_color("completion_existing_color", "TextremeTextEdit", Color(0.87, 0.87, 0.87, 0.13));
+	theme->set_color("completion_scroll_color", "TextremeTextEdit", control_font_color_pressed);
+	theme->set_color("completion_font_color", "TextremeTextEdit", Color(0.67, 0.67, 0.67));
+	theme->set_color("font_color", "TextremeTextEdit", control_font_color);
+	theme->set_color("font_color_selected", "TextremeTextEdit", Color(0, 0, 0));
+	theme->set_color("font_color_readonly", "TextremeTextEdit", Color(control_font_color.r, control_font_color.g, control_font_color.b, 0.5f));
+	theme->set_color("selection_color", "TextremeTextEdit", font_color_selection);
+	theme->set_color("mark_color", "TextremeTextEdit", Color(1.0, 0.4, 0.4, 0.4));
+	theme->set_color("bookmark_color", "TextremeTextEdit", Color(0.08, 0.49, 0.98));
+	theme->set_color("breakpoint_color", "TextremeTextEdit", Color(0.8, 0.8, 0.4, 0.2));
+	theme->set_color("executing_line_color", "TextremeTextEdit", Color(0.2, 0.8, 0.2, 0.4));
+	theme->set_color("code_folding_color", "TextremeTextEdit", Color(0.8, 0.8, 0.8, 0.8));
+	theme->set_color("current_line_color", "TextremeTextEdit", Color(0.25, 0.25, 0.26, 0.8));
+	theme->set_color("caret_color", "TextremeTextEdit", control_font_color);
+	theme->set_color("caret_background_color", "TextremeTextEdit", Color(0, 0, 0));
+	theme->set_color("symbol_color", "TextremeTextEdit", control_font_color_hover);
+	theme->set_color("brace_mismatch_color", "TextremeTextEdit", Color(1, 0.2, 0.2));
+	theme->set_color("line_number_color", "TextremeTextEdit", Color(0.67, 0.67, 0.67, 0.4));
+	theme->set_color("safe_line_number_color", "TextremeTextEdit", Color(0.67, 0.78, 0.67, 0.6));
+	theme->set_color("function_color", "TextremeTextEdit", Color(0.4, 0.64, 0.81));
+	theme->set_color("member_variable_color", "TextremeTextEdit", Color(0.9, 0.31, 0.35));
+	theme->set_color("number_color", "TextremeTextEdit", Color(0.92, 0.58, 0.2));
+	theme->set_color("word_highlighted_color", "TextremeTextEdit", Color(0.8, 0.9, 0.9, 0.15));
 
-	theme->set_constant("completion_lines", "CustomTextEdit", 7);
-	theme->set_constant("completion_max_width", "CustomTextEdit", 50);
-	theme->set_constant("completion_scroll_width", "CustomTextEdit", 3);
-	theme->set_constant("line_spacing", "CustomTextEdit", 4 * scale);
+	theme->set_constant("completion_lines", "TextremeTextEdit", 7);
+	theme->set_constant("completion_max_width", "TextremeTextEdit", 50);
+	theme->set_constant("completion_scroll_width", "TextremeTextEdit", 3);
+	theme->set_constant("line_spacing", "TextremeTextEdit", 4 * scale);
 
 	Ref<Texture> empty_icon = memnew(ImageTexture);
 

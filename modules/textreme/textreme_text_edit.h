@@ -28,21 +28,21 @@
 /* SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.                */
 /*************************************************************************/
 
-#ifndef TEXT_EDIT_H
-#define TEXT_EDIT_H
+#ifndef TEXTREME_TEXT_EDIT_H
+#define TEXTREME_TEXT_EDIT_H
 
 #include "scene/gui/control.h"
 #include "scene/gui/popup_menu.h"
 #include "scene/gui/scroll_bar.h"
 #include "scene/main/timer.h"
 
-namespace Internal {
+namespace Textreme {
 
 class SyntaxHighlighter;
 
-class CustomTextEdit : public Control {
+class TextremeTextEdit : public Control {
 
-	GDCLASS(CustomTextEdit, Control);
+	GDCLASS(TextremeTextEdit, Control);
 
 public:
 	struct HighlighterInfo {
@@ -826,29 +826,29 @@ public:
 	String get_text_for_lookup_completion();
 
 	virtual bool is_text_field() const;
-	CustomTextEdit();
-	~CustomTextEdit();
+	TextremeTextEdit();
+	~TextremeTextEdit();
 };
 
 class SyntaxHighlighter {
 protected:
-	CustomTextEdit *text_editor;
+	TextremeTextEdit *text_editor;
 
 public:
 	virtual ~SyntaxHighlighter() {}
 	virtual void _update_cache() = 0;
-	virtual Map<int, CustomTextEdit::HighlighterInfo> _get_line_syntax_highlighting(int p_line) = 0;
+	virtual Map<int, TextremeTextEdit::HighlighterInfo> _get_line_syntax_highlighting(int p_line) = 0;
 
 	virtual String get_name() const = 0;
 	virtual List<String> get_supported_languages() = 0;
 
-	void set_text_editor(CustomTextEdit *p_text_editor);
-	CustomTextEdit *get_text_editor();
+	void set_text_editor(TextremeTextEdit *p_text_editor);
+	TextremeTextEdit *get_text_editor();
 };
-} // namespace Internal
+} // namespace Textreme
 
-VARIANT_ENUM_CAST(Internal::CustomTextEdit::MenuItems);
-VARIANT_ENUM_CAST(Internal::CustomTextEdit::SearchFlags);
-VARIANT_ENUM_CAST(Internal::CustomTextEdit::SearchResult);
+VARIANT_ENUM_CAST(Textreme::TextremeTextEdit::MenuItems);
+VARIANT_ENUM_CAST(Textreme::TextremeTextEdit::SearchFlags);
+VARIANT_ENUM_CAST(Textreme::TextremeTextEdit::SearchResult);
 
-#endif // CUSTOM_TEXT_EDIT_H
+#endif // TEXTREME_TEXT_EDIT_H

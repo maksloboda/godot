@@ -28,7 +28,7 @@
 /* SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.                */
 /*************************************************************************/
 
-#include "custom_text_edit.h"
+#include "textreme_text_edit.h"
 
 #include "core/message_queue.h"
 #include "core/os/input.h"
@@ -38,7 +38,7 @@
 #include "core/script_language.h"
 #include "scene/main/viewport.h"
 
-using namespace Internal;
+using namespace Textreme;
 
 #ifdef TOOLS_ENABLED
 #include "editor/editor_scale.h"
@@ -114,17 +114,17 @@ static int _find_first_non_whitespace_column_of_line(const String &line) {
 	return left;
 }
 
-void CustomTextEdit::Text::set_font(const Ref<Font> &p_font) {
+void TextremeTextEdit::Text::set_font(const Ref<Font> &p_font) {
 
 	font = p_font;
 }
 
-void CustomTextEdit::Text::set_indent_size(int p_indent_size) {
+void TextremeTextEdit::Text::set_indent_size(int p_indent_size) {
 
 	indent_size = p_indent_size;
 }
 
-void CustomTextEdit::Text::_update_line_cache(int p_line) const {
+void TextremeTextEdit::Text::_update_line_cache(int p_line) const {
 
 	int w = 0;
 
@@ -220,7 +220,7 @@ void CustomTextEdit::Text::_update_line_cache(int p_line) const {
 	}
 }
 
-const Map<int, CustomTextEdit::Text::ColorRegionInfo> &CustomTextEdit::Text::get_color_region_info(int p_line) const {
+const Map<int, TextremeTextEdit::Text::ColorRegionInfo> &TextremeTextEdit::Text::get_color_region_info(int p_line) const {
 
 	static Map<int, ColorRegionInfo> cri;
 	ERR_FAIL_INDEX_V(p_line, text.size(), cri);
@@ -232,7 +232,7 @@ const Map<int, CustomTextEdit::Text::ColorRegionInfo> &CustomTextEdit::Text::get
 	return text[p_line].region_info;
 }
 
-int CustomTextEdit::Text::get_line_width(int p_line) const {
+int TextremeTextEdit::Text::get_line_width(int p_line) const {
 
 	ERR_FAIL_INDEX_V(p_line, text.size(), -1);
 
@@ -243,47 +243,47 @@ int CustomTextEdit::Text::get_line_width(int p_line) const {
 	return text[p_line].width_cache;
 }
 
-void CustomTextEdit::Text::set_line_wrap_amount(int p_line, int p_wrap_amount) const {
+void TextremeTextEdit::Text::set_line_wrap_amount(int p_line, int p_wrap_amount) const {
 
 	ERR_FAIL_INDEX(p_line, text.size());
 
 	text.write[p_line].wrap_amount_cache = p_wrap_amount;
 }
 
-int CustomTextEdit::Text::get_line_wrap_amount(int p_line) const {
+int TextremeTextEdit::Text::get_line_wrap_amount(int p_line) const {
 
 	ERR_FAIL_INDEX_V(p_line, text.size(), -1);
 
 	return text[p_line].wrap_amount_cache;
 }
 
-void CustomTextEdit::Text::clear_width_cache() {
+void TextremeTextEdit::Text::clear_width_cache() {
 
 	for (int i = 0; i < text.size(); i++) {
 		text.write[i].width_cache = -1;
 	}
 }
 
-void CustomTextEdit::Text::clear_wrap_cache() {
+void TextremeTextEdit::Text::clear_wrap_cache() {
 
 	for (int i = 0; i < text.size(); i++) {
 		text.write[i].wrap_amount_cache = -1;
 	}
 }
 
-void CustomTextEdit::Text::clear_info_icons() {
+void TextremeTextEdit::Text::clear_info_icons() {
 	for (int i = 0; i < text.size(); i++) {
 		text.write[i].has_info = false;
 	}
 }
 
-void CustomTextEdit::Text::clear() {
+void TextremeTextEdit::Text::clear() {
 
 	text.clear();
 	insert(0, "");
 }
 
-int CustomTextEdit::Text::get_max_width(bool p_exclude_hidden) const {
+int TextremeTextEdit::Text::get_max_width(bool p_exclude_hidden) const {
 	// Quite some work, but should be fast enough.
 
 	int max = 0;
@@ -294,7 +294,7 @@ int CustomTextEdit::Text::get_max_width(bool p_exclude_hidden) const {
 	return max;
 }
 
-void CustomTextEdit::Text::set(int p_line, const String &p_text) {
+void TextremeTextEdit::Text::set(int p_line, const String &p_text) {
 
 	ERR_FAIL_INDEX(p_line, text.size());
 
@@ -303,7 +303,7 @@ void CustomTextEdit::Text::set(int p_line, const String &p_text) {
 	text.write[p_line].data = p_text;
 }
 
-void CustomTextEdit::Text::insert(int p_at, const String &p_text) {
+void TextremeTextEdit::Text::insert(int p_at, const String &p_text) {
 
 	Line line;
 	line.marked = false;
@@ -317,12 +317,12 @@ void CustomTextEdit::Text::insert(int p_at, const String &p_text) {
 	line.data = p_text;
 	text.insert(p_at, line);
 }
-void CustomTextEdit::Text::remove(int p_at) {
+void TextremeTextEdit::Text::remove(int p_at) {
 
 	text.remove(p_at);
 }
 
-int CustomTextEdit::Text::get_char_width(CharType c, CharType next_c, int px) const {
+int TextremeTextEdit::Text::get_char_width(CharType c, CharType next_c, int px) const {
 
 	int tab_w = font->get_char_size(' ').width * indent_size;
 	int w = 0;
@@ -341,7 +341,7 @@ int CustomTextEdit::Text::get_char_width(CharType c, CharType next_c, int px) co
 	return w;
 }
 
-void CustomTextEdit::_update_scrollbars() {
+void TextremeTextEdit::_update_scrollbars() {
 
 	Size2 size = get_size();
 	Size2 hmin = h_scroll->get_combined_minimum_size();
@@ -443,7 +443,7 @@ void CustomTextEdit::_update_scrollbars() {
 	updating_scrolls = false;
 }
 
-void CustomTextEdit::_click_selection_held() {
+void TextremeTextEdit::_click_selection_held() {
 
 	// Warning: is_mouse_button_pressed(BUTTON_LEFT) returns false for double+ clicks, so this doesn't work for MODE_WORD
 	// and MODE_LINE. However, moving the mouse triggers _gui_input, which calls these functions too, so that's not a huge problem.
@@ -468,7 +468,7 @@ void CustomTextEdit::_click_selection_held() {
 	}
 }
 
-void CustomTextEdit::_update_selection_mode_pointer() {
+void TextremeTextEdit::_update_selection_mode_pointer() {
 	dragging_selection = true;
 	Point2 mp = get_local_mouse_position();
 
@@ -484,7 +484,7 @@ void CustomTextEdit::_update_selection_mode_pointer() {
 	click_select_held->start();
 }
 
-void CustomTextEdit::_update_selection_mode_word() {
+void TextremeTextEdit::_update_selection_mode_word() {
 	dragging_selection = true;
 	Point2 mp = get_local_mouse_position();
 
@@ -541,7 +541,7 @@ void CustomTextEdit::_update_selection_mode_word() {
 	click_select_held->start();
 }
 
-void CustomTextEdit::_update_selection_mode_line() {
+void TextremeTextEdit::_update_selection_mode_line() {
 	dragging_selection = true;
 	Point2 mp = get_local_mouse_position();
 
@@ -567,7 +567,7 @@ void CustomTextEdit::_update_selection_mode_line() {
 	click_select_held->start();
 }
 
-void CustomTextEdit::_update_minimap_click() {
+void TextremeTextEdit::_update_minimap_click() {
 	Point2 mp = get_local_mouse_position();
 
 	int xmargin_end = get_size().width - cache.style_normal->get_margin(MARGIN_RIGHT);
@@ -598,7 +598,7 @@ void CustomTextEdit::_update_minimap_click() {
 	}
 }
 
-void CustomTextEdit::_update_minimap_drag() {
+void TextremeTextEdit::_update_minimap_drag() {
 
 	if (!can_drag_minimap) {
 		return;
@@ -615,7 +615,7 @@ void CustomTextEdit::_update_minimap_drag() {
 	v_scroll->set_as_ratio(minimap_scroll_ratio + diff);
 }
 
-void CustomTextEdit::_notification(int p_what) {
+void TextremeTextEdit::_notification(int p_what) {
 
 	switch (p_what) {
 		case NOTIFICATION_ENTER_TREE: {
@@ -1791,7 +1791,7 @@ void CustomTextEdit::_notification(int p_what) {
 	}
 }
 
-void CustomTextEdit::_consume_pair_symbol(CharType ch) {
+void TextremeTextEdit::_consume_pair_symbol(CharType ch) {
 
 	int cursor_position_to_move = cursor_get_column() + 1;
 
@@ -1898,7 +1898,7 @@ void CustomTextEdit::_consume_pair_symbol(CharType ch) {
 	cursor_set_column(cursor_position_to_move);
 }
 
-void CustomTextEdit::_consume_backspace_for_pair_symbol(int prev_line, int prev_column) {
+void TextremeTextEdit::_consume_backspace_for_pair_symbol(int prev_line, int prev_column) {
 
 	bool remove_right_symbol = false;
 
@@ -1918,7 +1918,7 @@ void CustomTextEdit::_consume_backspace_for_pair_symbol(int prev_line, int prev_
 	}
 }
 
-void CustomTextEdit::backspace_at_cursor() {
+void TextremeTextEdit::backspace_at_cursor() {
 	if (readonly)
 		return;
 
@@ -1976,7 +1976,7 @@ void CustomTextEdit::backspace_at_cursor() {
 	cursor_set_column(prev_column);
 }
 
-void CustomTextEdit::indent_right() {
+void TextremeTextEdit::indent_right() {
 
 	int start_line;
 	int end_line;
@@ -2025,7 +2025,7 @@ void CustomTextEdit::indent_right() {
 	update();
 }
 
-void CustomTextEdit::indent_left() {
+void TextremeTextEdit::indent_left() {
 
 	int start_line;
 	int end_line;
@@ -2085,18 +2085,18 @@ void CustomTextEdit::indent_left() {
 	update();
 }
 
-int CustomTextEdit::_calculate_spaces_till_next_left_indent(int column) {
+int TextremeTextEdit::_calculate_spaces_till_next_left_indent(int column) {
 	int spaces_till_indent = column % indent_size;
 	if (spaces_till_indent == 0)
 		spaces_till_indent = indent_size;
 	return spaces_till_indent;
 }
 
-int CustomTextEdit::_calculate_spaces_till_next_right_indent(int column) {
+int TextremeTextEdit::_calculate_spaces_till_next_right_indent(int column) {
 	return indent_size - column % indent_size;
 }
 
-void CustomTextEdit::_get_mouse_pos(const Point2i &p_mouse, int &r_row, int &r_col) const {
+void TextremeTextEdit::_get_mouse_pos(const Point2i &p_mouse, int &r_row, int &r_col) const {
 
 	float rows = p_mouse.y;
 	rows -= cache.style_normal->get_margin(MARGIN_TOP);
@@ -2145,7 +2145,7 @@ void CustomTextEdit::_get_mouse_pos(const Point2i &p_mouse, int &r_row, int &r_c
 	r_col = col;
 }
 
-Vector2i CustomTextEdit::_get_cursor_pixel_pos() {
+Vector2i TextremeTextEdit::_get_cursor_pixel_pos() {
 	adjust_viewport_to_cursor();
 	int row = (cursor.line - get_first_visible_line() - cursor.wrap_ofs);
 	// Correct for hidden and wrapped lines
@@ -2183,7 +2183,7 @@ Vector2i CustomTextEdit::_get_cursor_pixel_pos() {
 	return Vector2i(x, y);
 }
 
-void CustomTextEdit::_get_minimap_mouse_row(const Point2i &p_mouse, int &r_row) const {
+void TextremeTextEdit::_get_minimap_mouse_row(const Point2i &p_mouse, int &r_row) const {
 
 	float rows = p_mouse.y;
 	rows -= cache.style_normal->get_margin(MARGIN_TOP);
@@ -2238,7 +2238,7 @@ void CustomTextEdit::_get_minimap_mouse_row(const Point2i &p_mouse, int &r_row) 
 	r_row = row;
 }
 
-void CustomTextEdit::_gui_input(const Ref<InputEvent> &p_gui_input) {
+void TextremeTextEdit::_gui_input(const Ref<InputEvent> &p_gui_input) {
 
 	double prev_v_scroll = v_scroll->get_value();
 	double prev_h_scroll = h_scroll->get_value();
@@ -3798,7 +3798,7 @@ void CustomTextEdit::_gui_input(const Ref<InputEvent> &p_gui_input) {
 	}
 }
 
-void CustomTextEdit::_scroll_up(real_t p_delta) {
+void TextremeTextEdit::_scroll_up(real_t p_delta) {
 
 	if (scrolling && smooth_scroll_enabled && SGN(target_v_scroll - v_scroll->get_value()) != SGN(-p_delta)) {
 		scrolling = false;
@@ -3826,7 +3826,7 @@ void CustomTextEdit::_scroll_up(real_t p_delta) {
 	}
 }
 
-void CustomTextEdit::_scroll_down(real_t p_delta) {
+void TextremeTextEdit::_scroll_down(real_t p_delta) {
 
 	if (scrolling && smooth_scroll_enabled && SGN(target_v_scroll - v_scroll->get_value()) != SGN(p_delta)) {
 		scrolling = false;
@@ -3855,7 +3855,7 @@ void CustomTextEdit::_scroll_down(real_t p_delta) {
 	}
 }
 
-void CustomTextEdit::_pre_shift_selection() {
+void TextremeTextEdit::_pre_shift_selection() {
 
 	if (!selection.active || selection.selecting_mode == Selection::MODE_NONE) {
 
@@ -3867,7 +3867,7 @@ void CustomTextEdit::_pre_shift_selection() {
 	selection.selecting_mode = Selection::MODE_SHIFT;
 }
 
-void CustomTextEdit::_post_shift_selection() {
+void TextremeTextEdit::_post_shift_selection() {
 
 	if (selection.active && selection.selecting_mode == Selection::MODE_SHIFT) {
 
@@ -3878,7 +3878,7 @@ void CustomTextEdit::_post_shift_selection() {
 	selection.selecting_text = true;
 }
 
-void CustomTextEdit::_scroll_lines_up() {
+void TextremeTextEdit::_scroll_lines_up() {
 	scrolling = false;
 	minimap_clicked = false;
 
@@ -3898,7 +3898,7 @@ void CustomTextEdit::_scroll_lines_up() {
 	}
 }
 
-void CustomTextEdit::_scroll_lines_down() {
+void TextremeTextEdit::_scroll_lines_down() {
 	scrolling = false;
 	minimap_clicked = false;
 
@@ -3920,7 +3920,7 @@ void CustomTextEdit::_scroll_lines_down() {
 
 /**** TEXT EDIT CORE API ****/
 
-void CustomTextEdit::_base_insert_text(int p_line, int p_char, const String &p_text, int &r_end_line, int &r_end_column) {
+void TextremeTextEdit::_base_insert_text(int p_line, int p_char, const String &p_text, int &r_end_line, int &r_end_column) {
 
 	// Save for undo.
 	ERR_FAIL_INDEX(p_line, text.size());
@@ -3999,7 +3999,7 @@ void CustomTextEdit::_base_insert_text(int p_line, int p_char, const String &p_t
 	_line_edited_from(p_line);
 }
 
-String CustomTextEdit::_base_get_text(int p_from_line, int p_from_column, int p_to_line, int p_to_column) const {
+String TextremeTextEdit::_base_get_text(int p_from_line, int p_from_column, int p_to_line, int p_to_column) const {
 
 	ERR_FAIL_INDEX_V(p_from_line, text.size(), String());
 	ERR_FAIL_INDEX_V(p_from_column, text[p_from_line].length() + 1, String());
@@ -4023,7 +4023,7 @@ String CustomTextEdit::_base_get_text(int p_from_line, int p_from_column, int p_
 	return ret;
 }
 
-void CustomTextEdit::_base_remove_text(int p_from_line, int p_from_column, int p_to_line, int p_to_column) {
+void TextremeTextEdit::_base_remove_text(int p_from_line, int p_from_column, int p_to_line, int p_to_column) {
 
 	ERR_FAIL_INDEX(p_from_line, text.size());
 	ERR_FAIL_INDEX(p_from_column, text[p_from_line].length() + 1);
@@ -4061,7 +4061,7 @@ void CustomTextEdit::_base_remove_text(int p_from_line, int p_from_column, int p
 	_line_edited_from(p_from_line);
 }
 
-void CustomTextEdit::_insert_text(int p_line, int p_char, const String &p_text, int *r_end_line, int *r_end_char) {
+void TextremeTextEdit::_insert_text(int p_line, int p_char, const String &p_text, int *r_end_line, int *r_end_char) {
 
 	if (!setting_text && idle_detect->is_inside_tree())
 		idle_detect->start();
@@ -4115,7 +4115,7 @@ void CustomTextEdit::_insert_text(int p_line, int p_char, const String &p_text, 
 	current_op.version = op.version;
 }
 
-void CustomTextEdit::_remove_text(int p_from_line, int p_from_column, int p_to_line, int p_to_column) {
+void TextremeTextEdit::_remove_text(int p_from_line, int p_from_column, int p_to_line, int p_to_column) {
 
 	if (!setting_text && idle_detect->is_inside_tree())
 		idle_detect->start();
@@ -4164,7 +4164,7 @@ void CustomTextEdit::_remove_text(int p_from_line, int p_from_column, int p_to_l
 	current_op = op;
 }
 
-void CustomTextEdit::_insert_text_at_cursor(const String &p_text) {
+void TextremeTextEdit::_insert_text_at_cursor(const String &p_text) {
 
 	int new_column, new_line;
 	_insert_text(cursor.line, cursor.column, p_text, &new_line, &new_column);
@@ -4175,7 +4175,7 @@ void CustomTextEdit::_insert_text_at_cursor(const String &p_text) {
 	update();
 }
 
-void CustomTextEdit::_line_edited_from(int p_line) {
+void TextremeTextEdit::_line_edited_from(int p_line) {
 	int cache_size = color_region_cache.size();
 	for (int i = p_line; i < cache_size; i++) {
 		color_region_cache.erase(i);
@@ -4191,7 +4191,7 @@ void CustomTextEdit::_line_edited_from(int p_line) {
 	}
 }
 
-int CustomTextEdit::get_char_count() {
+int TextremeTextEdit::get_char_count() {
 
 	int totalsize = 0;
 
@@ -4205,12 +4205,12 @@ int CustomTextEdit::get_char_count() {
 	return totalsize; // Omit last \n.
 }
 
-Size2 CustomTextEdit::get_minimum_size() const {
+Size2 TextremeTextEdit::get_minimum_size() const {
 
 	return cache.style_normal->get_minimum_size();
 }
 
-int CustomTextEdit::_get_control_height() const {
+int TextremeTextEdit::_get_control_height() const {
 	int control_height = get_size().height;
 	control_height -= cache.style_normal->get_minimum_size().height;
 	if (h_scroll->is_visible_in_tree()) {
@@ -4219,7 +4219,7 @@ int CustomTextEdit::_get_control_height() const {
 	return control_height;
 }
 
-void CustomTextEdit::_generate_context_menu() {
+void TextremeTextEdit::_generate_context_menu() {
 	// Reorganize context menu.
 	menu->clear();
 	if (!readonly)
@@ -4238,15 +4238,15 @@ void CustomTextEdit::_generate_context_menu() {
 	}
 }
 
-int CustomTextEdit::get_visible_rows() const {
+int TextremeTextEdit::get_visible_rows() const {
 	return _get_control_height() / get_row_height();
 }
 
-int CustomTextEdit::_get_minimap_visible_rows() const {
+int TextremeTextEdit::_get_minimap_visible_rows() const {
 	return _get_control_height() / (minimap_char_size.y + minimap_line_spacing);
 }
 
-int CustomTextEdit::get_total_visible_rows() const {
+int TextremeTextEdit::get_total_visible_rows() const {
 
 	// Returns the total amount of rows we need in the editor.
 	// This skips hidden lines and counts each wrapping of a line.
@@ -4263,7 +4263,7 @@ int CustomTextEdit::get_total_visible_rows() const {
 	return total_rows;
 }
 
-void CustomTextEdit::_update_wrap_at() {
+void TextremeTextEdit::_update_wrap_at() {
 
 	wrap_at = get_size().width - cache.style_normal->get_minimum_size().width - cache.line_number_w - cache.breakpoint_gutter_width - cache.fold_gutter_width - cache.info_gutter_width - cache.minimap_width - wrap_right_offset;
 	update_cursor_wrap_offset();
@@ -4278,7 +4278,7 @@ void CustomTextEdit::_update_wrap_at() {
 	}
 }
 
-void CustomTextEdit::adjust_viewport_to_cursor() {
+void TextremeTextEdit::adjust_viewport_to_cursor() {
 
 	// Make sure cursor is visible on the screen.
 	scrolling = false;
@@ -4322,7 +4322,7 @@ void CustomTextEdit::adjust_viewport_to_cursor() {
 	update();
 }
 
-void CustomTextEdit::center_viewport_to_cursor() {
+void TextremeTextEdit::center_viewport_to_cursor() {
 
 	// Move viewport so the cursor is in the center of the screen.
 	scrolling = false;
@@ -4354,7 +4354,7 @@ void CustomTextEdit::center_viewport_to_cursor() {
 	update();
 }
 
-void CustomTextEdit::update_cursor_wrap_offset() {
+void TextremeTextEdit::update_cursor_wrap_offset() {
 	int first_vis_line = get_first_visible_line();
 	if (line_wraps(first_vis_line)) {
 		cursor.wrap_ofs = MIN(cursor.wrap_ofs, times_line_wraps(first_vis_line));
@@ -4364,7 +4364,7 @@ void CustomTextEdit::update_cursor_wrap_offset() {
 	set_line_as_first_visible(cursor.line_ofs, cursor.wrap_ofs);
 }
 
-bool CustomTextEdit::line_wraps(int line) const {
+bool TextremeTextEdit::line_wraps(int line) const {
 
 	ERR_FAIL_INDEX_V(line, text.size(), 0);
 	if (!is_wrap_enabled())
@@ -4372,7 +4372,7 @@ bool CustomTextEdit::line_wraps(int line) const {
 	return text.get_line_width(line) > wrap_at;
 }
 
-int CustomTextEdit::times_line_wraps(int line) const {
+int TextremeTextEdit::times_line_wraps(int line) const {
 
 	ERR_FAIL_INDEX_V(line, text.size(), 0);
 	if (!line_wraps(line))
@@ -4389,7 +4389,7 @@ int CustomTextEdit::times_line_wraps(int line) const {
 	return wrap_amount;
 }
 
-Vector<String> CustomTextEdit::get_wrap_rows_text(int p_line) const {
+Vector<String> TextremeTextEdit::get_wrap_rows_text(int p_line) const {
 
 	ERR_FAIL_INDEX_V(p_line, text.size(), Vector<String>());
 
@@ -4462,12 +4462,12 @@ Vector<String> CustomTextEdit::get_wrap_rows_text(int p_line) const {
 	return lines;
 }
 
-int CustomTextEdit::get_cursor_wrap_index() const {
+int TextremeTextEdit::get_cursor_wrap_index() const {
 
 	return get_line_wrap_index_at_col(cursor.line, cursor.column);
 }
 
-int CustomTextEdit::get_line_wrap_index_at_col(int p_line, int p_column) const {
+int TextremeTextEdit::get_line_wrap_index_at_col(int p_line, int p_column) const {
 
 	ERR_FAIL_INDEX_V(p_line, text.size(), 0);
 
@@ -4488,7 +4488,7 @@ int CustomTextEdit::get_line_wrap_index_at_col(int p_line, int p_column) const {
 	return wrap_index;
 }
 
-void CustomTextEdit::cursor_set_column(int p_col, bool p_adjust_viewport) {
+void TextremeTextEdit::cursor_set_column(int p_col, bool p_adjust_viewport) {
 	if (p_col < 0)
 		p_col = 0;
 
@@ -4508,7 +4508,7 @@ void CustomTextEdit::cursor_set_column(int p_col, bool p_adjust_viewport) {
 	}
 }
 
-void CustomTextEdit::cursor_set_line(int p_row, bool p_adjust_viewport, bool p_can_be_hidden, int p_wrap_index) {
+void TextremeTextEdit::cursor_set_line(int p_row, bool p_adjust_viewport, bool p_can_be_hidden, int p_wrap_index) {
 
 	if (setting_row)
 		return;
@@ -4561,21 +4561,21 @@ void CustomTextEdit::cursor_set_line(int p_row, bool p_adjust_viewport, bool p_c
 	}
 }
 
-int CustomTextEdit::cursor_get_column() const {
+int TextremeTextEdit::cursor_get_column() const {
 
 	return cursor.column;
 }
 
-int CustomTextEdit::cursor_get_line() const {
+int TextremeTextEdit::cursor_get_line() const {
 
 	return cursor.line;
 }
 
-bool CustomTextEdit::cursor_get_blink_enabled() const {
+bool TextremeTextEdit::cursor_get_blink_enabled() const {
 	return caret_blink_enabled;
 }
 
-void CustomTextEdit::cursor_set_blink_enabled(const bool p_enabled) {
+void TextremeTextEdit::cursor_set_blink_enabled(const bool p_enabled) {
 	caret_blink_enabled = p_enabled;
 
 	if (has_focus()) {
@@ -4589,38 +4589,38 @@ void CustomTextEdit::cursor_set_blink_enabled(const bool p_enabled) {
 	draw_caret = true;
 }
 
-float CustomTextEdit::cursor_get_blink_speed() const {
+float TextremeTextEdit::cursor_get_blink_speed() const {
 	return caret_blink_timer->get_wait_time();
 }
 
-void CustomTextEdit::cursor_set_blink_speed(const float p_speed) {
+void TextremeTextEdit::cursor_set_blink_speed(const float p_speed) {
 	ERR_FAIL_COND(p_speed <= 0);
 	caret_blink_timer->set_wait_time(p_speed);
 }
 
-void CustomTextEdit::cursor_set_block_mode(const bool p_enable) {
+void TextremeTextEdit::cursor_set_block_mode(const bool p_enable) {
 	block_caret = p_enable;
 	update();
 }
 
-bool CustomTextEdit::cursor_is_block_mode() const {
+bool TextremeTextEdit::cursor_is_block_mode() const {
 	return block_caret;
 }
 
-void CustomTextEdit::set_right_click_moves_caret(bool p_enable) {
+void TextremeTextEdit::set_right_click_moves_caret(bool p_enable) {
 	right_click_moves_caret = p_enable;
 }
 
-bool CustomTextEdit::is_right_click_moving_caret() const {
+bool TextremeTextEdit::is_right_click_moving_caret() const {
 	return right_click_moves_caret;
 }
 
-void CustomTextEdit::_v_scroll_input() {
+void TextremeTextEdit::_v_scroll_input() {
 	scrolling = false;
 	minimap_clicked = false;
 }
 
-void CustomTextEdit::_scroll_moved(double p_to_val) {
+void TextremeTextEdit::_scroll_moved(double p_to_val) {
 
 	if (updating_scrolls)
 		return;
@@ -4652,12 +4652,12 @@ void CustomTextEdit::_scroll_moved(double p_to_val) {
 	update();
 }
 
-int CustomTextEdit::get_row_height() const {
+int TextremeTextEdit::get_row_height() const {
 
 	return cache.font->get_height() + cache.line_spacing;
 }
 
-int CustomTextEdit::get_char_pos_for_line(int p_px, int p_line, int p_wrap_index) const {
+int TextremeTextEdit::get_char_pos_for_line(int p_px, int p_line, int p_wrap_index) const {
 
 	ERR_FAIL_INDEX_V(p_line, text.size(), 0);
 
@@ -4688,7 +4688,7 @@ int CustomTextEdit::get_char_pos_for_line(int p_px, int p_line, int p_wrap_index
 	}
 }
 
-int CustomTextEdit::get_column_x_offset_for_line(int p_char, int p_line) const {
+int TextremeTextEdit::get_column_x_offset_for_line(int p_char, int p_line) const {
 
 	ERR_FAIL_INDEX_V(p_line, text.size(), 0);
 
@@ -4722,7 +4722,7 @@ int CustomTextEdit::get_column_x_offset_for_line(int p_char, int p_line) const {
 	}
 }
 
-int CustomTextEdit::get_char_pos_for(int p_px, String p_str) const {
+int TextremeTextEdit::get_char_pos_for(int p_px, String p_str) const {
 
 	int px = 0;
 	int c = 0;
@@ -4740,7 +4740,7 @@ int CustomTextEdit::get_char_pos_for(int p_px, String p_str) const {
 	return c;
 }
 
-int CustomTextEdit::get_column_x_offset(int p_char, String p_str) const {
+int TextremeTextEdit::get_column_x_offset(int p_char, String p_str) const {
 
 	int px = 0;
 
@@ -4755,7 +4755,7 @@ int CustomTextEdit::get_column_x_offset(int p_char, String p_str) const {
 	return px;
 }
 
-void CustomTextEdit::insert_text_at_cursor(const String &p_text) {
+void TextremeTextEdit::insert_text_at_cursor(const String &p_text) {
 
 	if (selection.active) {
 
@@ -4771,7 +4771,7 @@ void CustomTextEdit::insert_text_at_cursor(const String &p_text) {
 	update();
 }
 
-Control::CursorShape CustomTextEdit::get_cursor_shape(const Point2 &p_pos) const {
+Control::CursorShape TextremeTextEdit::get_cursor_shape(const Point2 &p_pos) const {
 	if (highlighted_word != String())
 		return CURSOR_POINTING_HAND;
 
@@ -4829,7 +4829,7 @@ Control::CursorShape CustomTextEdit::get_cursor_shape(const Point2 &p_pos) const
 	return get_default_cursor_shape();
 }
 
-void CustomTextEdit::set_text(String p_text) {
+void TextremeTextEdit::set_text(String p_text) {
 
 	setting_text = true;
 	if (!undo_enabled) {
@@ -4855,7 +4855,7 @@ void CustomTextEdit::set_text(String p_text) {
 	setting_text = false;
 };
 
-String CustomTextEdit::get_text() {
+String TextremeTextEdit::get_text() {
 	String longthing;
 	int len = text.size();
 	for (int i = 0; i < len; i++) {
@@ -4868,7 +4868,7 @@ String CustomTextEdit::get_text() {
 	return longthing;
 };
 
-String CustomTextEdit::get_text_for_lookup_completion() {
+String TextremeTextEdit::get_text_for_lookup_completion() {
 
 	int row, col;
 	_get_mouse_pos(get_local_mouse_position(), row, col);
@@ -4893,7 +4893,7 @@ String CustomTextEdit::get_text_for_lookup_completion() {
 	return longthing;
 }
 
-String CustomTextEdit::get_text_for_completion() {
+String TextremeTextEdit::get_text_for_completion() {
 
 	String longthing;
 	int len = text.size();
@@ -4915,7 +4915,7 @@ String CustomTextEdit::get_text_for_completion() {
 	return longthing;
 };
 
-String CustomTextEdit::get_line(int line) const {
+String TextremeTextEdit::get_line(int line) const {
 
 	if (line < 0 || line >= text.size())
 		return "";
@@ -4923,7 +4923,7 @@ String CustomTextEdit::get_line(int line) const {
 	return text[line];
 };
 
-void CustomTextEdit::_clear() {
+void TextremeTextEdit::_clear() {
 
 	clear_undo_history();
 	text.clear();
@@ -4936,14 +4936,14 @@ void CustomTextEdit::_clear() {
 	selection.active = false;
 }
 
-void CustomTextEdit::clear() {
+void TextremeTextEdit::clear() {
 
 	setting_text = true;
 	_clear();
 	setting_text = false;
 };
 
-void CustomTextEdit::set_readonly(bool p_readonly) {
+void TextremeTextEdit::set_readonly(bool p_readonly) {
 
 	if (readonly == p_readonly)
 		return;
@@ -4980,32 +4980,32 @@ void CustomTextEdit::set_readonly(bool p_readonly) {
 	update();
 }
 
-bool CustomTextEdit::is_readonly() const {
+bool TextremeTextEdit::is_readonly() const {
 
 	return readonly;
 }
 
-void CustomTextEdit::set_wrap_enabled(bool p_wrap_enabled) {
+void TextremeTextEdit::set_wrap_enabled(bool p_wrap_enabled) {
 
 	wrap_enabled = p_wrap_enabled;
 }
 
-bool CustomTextEdit::is_wrap_enabled() const {
+bool TextremeTextEdit::is_wrap_enabled() const {
 
 	return wrap_enabled;
 }
 
-void CustomTextEdit::set_max_chars(int p_max_chars) {
+void TextremeTextEdit::set_max_chars(int p_max_chars) {
 
 	max_chars = p_max_chars;
 }
 
-int CustomTextEdit::get_max_chars() const {
+int TextremeTextEdit::get_max_chars() const {
 
 	return max_chars;
 }
 
-void CustomTextEdit::_reset_caret_blink_timer() {
+void TextremeTextEdit::_reset_caret_blink_timer() {
 	if (caret_blink_enabled) {
 		draw_caret = true;
 		if (has_focus()) {
@@ -5016,14 +5016,14 @@ void CustomTextEdit::_reset_caret_blink_timer() {
 	}
 }
 
-void CustomTextEdit::_toggle_draw_caret() {
+void TextremeTextEdit::_toggle_draw_caret() {
 	draw_caret = !draw_caret;
 	if (is_visible_in_tree() && has_focus() && window_has_focus) {
 		update();
 	}
 }
 
-void CustomTextEdit::_update_caches() {
+void TextremeTextEdit::_update_caches() {
 
 	cache.style_normal = get_stylebox("normal");
 	cache.style_focus = get_stylebox("focus");
@@ -5077,11 +5077,11 @@ void CustomTextEdit::_update_caches() {
 	}
 }
 
-SyntaxHighlighter *CustomTextEdit::_get_syntax_highlighting() {
+SyntaxHighlighter *TextremeTextEdit::_get_syntax_highlighting() {
 	return syntax_highlighter;
 }
 
-void CustomTextEdit::_set_syntax_highlighting(SyntaxHighlighter *p_syntax_highlighter) {
+void TextremeTextEdit::_set_syntax_highlighting(SyntaxHighlighter *p_syntax_highlighter) {
 	syntax_highlighter = p_syntax_highlighter;
 	if (syntax_highlighter) {
 		syntax_highlighter->set_text_editor(this);
@@ -5091,7 +5091,7 @@ void CustomTextEdit::_set_syntax_highlighting(SyntaxHighlighter *p_syntax_highli
 	update();
 }
 
-int CustomTextEdit::_is_line_in_region(int p_line) {
+int TextremeTextEdit::_is_line_in_region(int p_line) {
 
 	// Do we have in cache?
 	if (color_region_cache.has(p_line)) {
@@ -5135,21 +5135,21 @@ int CustomTextEdit::_is_line_in_region(int p_line) {
 	return in_region;
 }
 
-CustomTextEdit::ColorRegion CustomTextEdit::_get_color_region(int p_region) const {
+TextremeTextEdit::ColorRegion TextremeTextEdit::_get_color_region(int p_region) const {
 	if (p_region < 0 || p_region >= color_regions.size()) {
 		return ColorRegion();
 	}
 	return color_regions[p_region];
 }
 
-Map<int, CustomTextEdit::Text::ColorRegionInfo> CustomTextEdit::_get_line_color_region_info(int p_line) const {
+Map<int, TextremeTextEdit::Text::ColorRegionInfo> TextremeTextEdit::_get_line_color_region_info(int p_line) const {
 	if (p_line < 0 || p_line > text.size() - 1) {
 		return Map<int, Text::ColorRegionInfo>();
 	}
 	return text.get_color_region_info(p_line);
 }
 
-void CustomTextEdit::clear_colors() {
+void TextremeTextEdit::clear_colors() {
 
 	keywords.clear();
 	member_keywords.clear();
@@ -5160,24 +5160,24 @@ void CustomTextEdit::clear_colors() {
 	update();
 }
 
-void CustomTextEdit::add_keyword_color(const String &p_keyword, const Color &p_color) {
+void TextremeTextEdit::add_keyword_color(const String &p_keyword, const Color &p_color) {
 
 	keywords[p_keyword] = p_color;
 	syntax_highlighting_cache.clear();
 	update();
 }
 
-bool CustomTextEdit::has_keyword_color(String p_keyword) const {
+bool TextremeTextEdit::has_keyword_color(String p_keyword) const {
 	return keywords.has(p_keyword);
 }
 
-Color CustomTextEdit::get_keyword_color(String p_keyword) const {
+Color TextremeTextEdit::get_keyword_color(String p_keyword) const {
 
 	ERR_FAIL_COND_V(!keywords.has(p_keyword), Color());
 	return keywords[p_keyword];
 }
 
-void CustomTextEdit::add_color_region(const String &p_begin_key, const String &p_end_key, const Color &p_color, bool p_line_only) {
+void TextremeTextEdit::add_color_region(const String &p_begin_key, const String &p_end_key, const Color &p_color, bool p_line_only) {
 
 	color_regions.push_back(ColorRegion(p_begin_key, p_end_key, p_color, p_line_only));
 	syntax_highlighting_cache.clear();
@@ -5185,42 +5185,42 @@ void CustomTextEdit::add_color_region(const String &p_begin_key, const String &p
 	update();
 }
 
-void CustomTextEdit::add_member_keyword(const String &p_keyword, const Color &p_color) {
+void TextremeTextEdit::add_member_keyword(const String &p_keyword, const Color &p_color) {
 	member_keywords[p_keyword] = p_color;
 	syntax_highlighting_cache.clear();
 	update();
 }
 
-bool CustomTextEdit::has_member_color(String p_member) const {
+bool TextremeTextEdit::has_member_color(String p_member) const {
 	return member_keywords.has(p_member);
 }
 
-Color CustomTextEdit::get_member_color(String p_member) const {
+Color TextremeTextEdit::get_member_color(String p_member) const {
 	return member_keywords[p_member];
 }
 
-void CustomTextEdit::clear_member_keywords() {
+void TextremeTextEdit::clear_member_keywords() {
 	member_keywords.clear();
 	syntax_highlighting_cache.clear();
 	update();
 }
 
-void CustomTextEdit::set_syntax_coloring(bool p_enabled) {
+void TextremeTextEdit::set_syntax_coloring(bool p_enabled) {
 
 	syntax_coloring = p_enabled;
 	update();
 }
 
-bool CustomTextEdit::is_syntax_coloring_enabled() const {
+bool TextremeTextEdit::is_syntax_coloring_enabled() const {
 
 	return syntax_coloring;
 }
 
-void CustomTextEdit::set_auto_indent(bool p_auto_indent) {
+void TextremeTextEdit::set_auto_indent(bool p_auto_indent) {
 	auto_indent = p_auto_indent;
 }
 
-void CustomTextEdit::cut() {
+void TextremeTextEdit::cut() {
 
 	if (!selection.active) {
 
@@ -5256,7 +5256,7 @@ void CustomTextEdit::cut() {
 	}
 }
 
-void CustomTextEdit::copy() {
+void TextremeTextEdit::copy() {
 
 	if (!selection.active) {
 
@@ -5273,7 +5273,7 @@ void CustomTextEdit::copy() {
 	}
 }
 
-void CustomTextEdit::paste() {
+void TextremeTextEdit::paste() {
 
 	String clipboard = OS::get_singleton()->get_clipboard();
 
@@ -5299,7 +5299,7 @@ void CustomTextEdit::paste() {
 	update();
 }
 
-void CustomTextEdit::select_all() {
+void TextremeTextEdit::select_all() {
 	if (!selecting_enabled)
 		return;
 
@@ -5319,13 +5319,13 @@ void CustomTextEdit::select_all() {
 	update();
 }
 
-void CustomTextEdit::deselect() {
+void TextremeTextEdit::deselect() {
 
 	selection.active = false;
 	update();
 }
 
-void CustomTextEdit::select(int p_from_line, int p_from_column, int p_to_line, int p_to_column) {
+void TextremeTextEdit::select(int p_from_line, int p_from_column, int p_to_line, int p_to_column) {
 	if (!selecting_enabled)
 		return;
 
@@ -5380,38 +5380,38 @@ void CustomTextEdit::select(int p_from_line, int p_from_column, int p_to_line, i
 
 	update();
 }
-void CustomTextEdit::swap_lines(int line1, int line2) {
+void TextremeTextEdit::swap_lines(int line1, int line2) {
 	String tmp = get_line(line1);
 	String tmp2 = get_line(line2);
 	set_line(line2, tmp);
 	set_line(line1, tmp2);
 }
-bool CustomTextEdit::is_selection_active() const {
+bool TextremeTextEdit::is_selection_active() const {
 
 	return selection.active;
 }
-int CustomTextEdit::get_selection_from_line() const {
+int TextremeTextEdit::get_selection_from_line() const {
 
 	ERR_FAIL_COND_V(!selection.active, -1);
 	return selection.from_line;
 }
-int CustomTextEdit::get_selection_from_column() const {
+int TextremeTextEdit::get_selection_from_column() const {
 
 	ERR_FAIL_COND_V(!selection.active, -1);
 	return selection.from_column;
 }
-int CustomTextEdit::get_selection_to_line() const {
+int TextremeTextEdit::get_selection_to_line() const {
 
 	ERR_FAIL_COND_V(!selection.active, -1);
 	return selection.to_line;
 }
-int CustomTextEdit::get_selection_to_column() const {
+int TextremeTextEdit::get_selection_to_column() const {
 
 	ERR_FAIL_COND_V(!selection.active, -1);
 	return selection.to_column;
 }
 
-String CustomTextEdit::get_selection_text() const {
+String TextremeTextEdit::get_selection_text() const {
 
 	if (!selection.active)
 		return "";
@@ -5419,7 +5419,7 @@ String CustomTextEdit::get_selection_text() const {
 	return _base_get_text(selection.from_line, selection.from_column, selection.to_line, selection.to_column);
 }
 
-String CustomTextEdit::get_word_under_cursor() const {
+String TextremeTextEdit::get_word_under_cursor() const {
 
 	int prev_cc = cursor.column;
 	while (prev_cc > 0) {
@@ -5441,30 +5441,30 @@ String CustomTextEdit::get_word_under_cursor() const {
 	return text[cursor.line].substr(prev_cc, next_cc - prev_cc);
 }
 
-void CustomTextEdit::set_search_text(const String &p_search_text) {
+void TextremeTextEdit::set_search_text(const String &p_search_text) {
 	search_text = p_search_text;
 }
 
-void CustomTextEdit::set_search_flags(uint32_t p_flags) {
+void TextremeTextEdit::set_search_flags(uint32_t p_flags) {
 	search_flags = p_flags;
 }
 
-void CustomTextEdit::set_current_search_result(int line, int col) {
+void TextremeTextEdit::set_current_search_result(int line, int col) {
 	search_result_line = line;
 	search_result_col = col;
 	update();
 }
 
-void CustomTextEdit::set_highlight_all_occurrences(const bool p_enabled) {
+void TextremeTextEdit::set_highlight_all_occurrences(const bool p_enabled) {
 	highlight_all_occurrences = p_enabled;
 	update();
 }
 
-bool CustomTextEdit::is_highlight_all_occurrences_enabled() const {
+bool TextremeTextEdit::is_highlight_all_occurrences_enabled() const {
 	return highlight_all_occurrences;
 }
 
-int CustomTextEdit::_get_column_pos_of_word(const String &p_key, const String &p_search, uint32_t p_search_flags, int p_from_column) {
+int TextremeTextEdit::_get_column_pos_of_word(const String &p_key, const String &p_search, uint32_t p_search_flags, int p_from_column) {
 	int col = -1;
 
 	if (p_key.length() > 0 && p_search.length() > 0) {
@@ -5496,7 +5496,7 @@ int CustomTextEdit::_get_column_pos_of_word(const String &p_key, const String &p
 	return col;
 }
 
-PoolVector<int> CustomTextEdit::_search_bind(const String &p_key, uint32_t p_search_flags, int p_from_line, int p_from_column) const {
+PoolVector<int> TextremeTextEdit::_search_bind(const String &p_key, uint32_t p_search_flags, int p_from_line, int p_from_column) const {
 
 	int col, line;
 	if (search(p_key, p_search_flags, p_from_line, p_from_column, line, col)) {
@@ -5512,7 +5512,7 @@ PoolVector<int> CustomTextEdit::_search_bind(const String &p_key, uint32_t p_sea
 	}
 }
 
-bool CustomTextEdit::search(const String &p_key, uint32_t p_search_flags, int p_from_line, int p_from_column, int &r_line, int &r_column) const {
+bool TextremeTextEdit::search(const String &p_key, uint32_t p_search_flags, int p_from_line, int p_from_column, int &r_line, int &r_column) const {
 
 	if (p_key.length() == 0)
 		return false;
@@ -5629,61 +5629,61 @@ bool CustomTextEdit::search(const String &p_key, uint32_t p_search_flags, int p_
 	return true;
 }
 
-void CustomTextEdit::_cursor_changed_emit() {
+void TextremeTextEdit::_cursor_changed_emit() {
 
 	emit_signal("cursor_changed");
 	cursor_changed_dirty = false;
 }
 
-void CustomTextEdit::_text_changed_emit() {
+void TextremeTextEdit::_text_changed_emit() {
 
 	emit_signal("text_changed");
 	text_changed_dirty = false;
 }
 
-void CustomTextEdit::set_line_as_marked(int p_line, bool p_marked) {
+void TextremeTextEdit::set_line_as_marked(int p_line, bool p_marked) {
 
 	ERR_FAIL_INDEX(p_line, text.size());
 	text.set_marked(p_line, p_marked);
 	update();
 }
 
-void CustomTextEdit::set_line_as_safe(int p_line, bool p_safe) {
+void TextremeTextEdit::set_line_as_safe(int p_line, bool p_safe) {
 	ERR_FAIL_INDEX(p_line, text.size());
 	text.set_safe(p_line, p_safe);
 	update();
 }
 
-bool CustomTextEdit::is_line_set_as_safe(int p_line) const {
+bool TextremeTextEdit::is_line_set_as_safe(int p_line) const {
 	ERR_FAIL_INDEX_V(p_line, text.size(), false);
 	return text.is_safe(p_line);
 }
 
-void CustomTextEdit::set_executing_line(int p_line) {
+void TextremeTextEdit::set_executing_line(int p_line) {
 	ERR_FAIL_INDEX(p_line, text.size());
 	executing_line = p_line;
 	update();
 }
 
-void CustomTextEdit::clear_executing_line() {
+void TextremeTextEdit::clear_executing_line() {
 	executing_line = -1;
 	update();
 }
 
-bool CustomTextEdit::is_line_set_as_bookmark(int p_line) const {
+bool TextremeTextEdit::is_line_set_as_bookmark(int p_line) const {
 
 	ERR_FAIL_INDEX_V(p_line, text.size(), false);
 	return text.is_bookmark(p_line);
 }
 
-void CustomTextEdit::set_line_as_bookmark(int p_line, bool p_bookmark) {
+void TextremeTextEdit::set_line_as_bookmark(int p_line, bool p_bookmark) {
 
 	ERR_FAIL_INDEX(p_line, text.size());
 	text.set_bookmark(p_line, p_bookmark);
 	update();
 }
 
-void CustomTextEdit::get_bookmarks(List<int> *p_bookmarks) const {
+void TextremeTextEdit::get_bookmarks(List<int> *p_bookmarks) const {
 
 	for (int i = 0; i < text.size(); i++) {
 		if (text.is_bookmark(i))
@@ -5691,7 +5691,7 @@ void CustomTextEdit::get_bookmarks(List<int> *p_bookmarks) const {
 	}
 }
 
-Array CustomTextEdit::get_bookmarks_array() const {
+Array TextremeTextEdit::get_bookmarks_array() const {
 
 	Array arr;
 	for (int i = 0; i < text.size(); i++) {
@@ -5701,20 +5701,20 @@ Array CustomTextEdit::get_bookmarks_array() const {
 	return arr;
 }
 
-bool CustomTextEdit::is_line_set_as_breakpoint(int p_line) const {
+bool TextremeTextEdit::is_line_set_as_breakpoint(int p_line) const {
 
 	ERR_FAIL_INDEX_V(p_line, text.size(), false);
 	return text.is_breakpoint(p_line);
 }
 
-void CustomTextEdit::set_line_as_breakpoint(int p_line, bool p_breakpoint) {
+void TextremeTextEdit::set_line_as_breakpoint(int p_line, bool p_breakpoint) {
 
 	ERR_FAIL_INDEX(p_line, text.size());
 	text.set_breakpoint(p_line, p_breakpoint);
 	update();
 }
 
-void CustomTextEdit::get_breakpoints(List<int> *p_breakpoints) const {
+void TextremeTextEdit::get_breakpoints(List<int> *p_breakpoints) const {
 
 	for (int i = 0; i < text.size(); i++) {
 		if (text.is_breakpoint(i))
@@ -5722,7 +5722,7 @@ void CustomTextEdit::get_breakpoints(List<int> *p_breakpoints) const {
 	}
 }
 
-Array CustomTextEdit::get_breakpoints_array() const {
+Array TextremeTextEdit::get_breakpoints_array() const {
 
 	Array arr;
 	for (int i = 0; i < text.size(); i++) {
@@ -5732,7 +5732,7 @@ Array CustomTextEdit::get_breakpoints_array() const {
 	return arr;
 }
 
-void CustomTextEdit::remove_breakpoints() {
+void TextremeTextEdit::remove_breakpoints() {
 	for (int i = 0; i < text.size(); i++) {
 		if (text.is_breakpoint(i))
 			/* Should "breakpoint_toggled" be fired when breakpoints are removed this way? */
@@ -5740,18 +5740,18 @@ void CustomTextEdit::remove_breakpoints() {
 	}
 }
 
-void CustomTextEdit::set_line_info_icon(int p_line, Ref<Texture> p_icon, String p_info) {
+void TextremeTextEdit::set_line_info_icon(int p_line, Ref<Texture> p_icon, String p_info) {
 	ERR_FAIL_INDEX(p_line, text.size());
 	text.set_info_icon(p_line, p_icon, p_info);
 	update();
 }
 
-void CustomTextEdit::clear_info_icons() {
+void TextremeTextEdit::clear_info_icons() {
 	text.clear_info_icons();
 	update();
 }
 
-void CustomTextEdit::set_line_as_hidden(int p_line, bool p_hidden) {
+void TextremeTextEdit::set_line_as_hidden(int p_line, bool p_hidden) {
 
 	ERR_FAIL_INDEX(p_line, text.size());
 	if (is_hiding_enabled() || !p_hidden)
@@ -5759,13 +5759,13 @@ void CustomTextEdit::set_line_as_hidden(int p_line, bool p_hidden) {
 	update();
 }
 
-bool CustomTextEdit::is_line_hidden(int p_line) const {
+bool TextremeTextEdit::is_line_hidden(int p_line) const {
 
 	ERR_FAIL_INDEX_V(p_line, text.size(), false);
 	return text.is_hidden(p_line);
 }
 
-void CustomTextEdit::fold_all_lines() {
+void TextremeTextEdit::fold_all_lines() {
 
 	for (int i = 0; i < text.size(); i++) {
 		fold_line(i);
@@ -5774,7 +5774,7 @@ void CustomTextEdit::fold_all_lines() {
 	update();
 }
 
-void CustomTextEdit::unhide_all_lines() {
+void TextremeTextEdit::unhide_all_lines() {
 
 	for (int i = 0; i < text.size(); i++) {
 		text.set_hidden(i, false);
@@ -5783,7 +5783,7 @@ void CustomTextEdit::unhide_all_lines() {
 	update();
 }
 
-int CustomTextEdit::num_lines_from(int p_line_from, int visible_amount) const {
+int TextremeTextEdit::num_lines_from(int p_line_from, int visible_amount) const {
 
 	// Returns the number of lines (hidden and unhidden) from p_line_from to (p_line_from + visible_amount of unhidden lines).
 	ERR_FAIL_INDEX_V(p_line_from, text.size(), ABS(visible_amount));
@@ -5816,7 +5816,7 @@ int CustomTextEdit::num_lines_from(int p_line_from, int visible_amount) const {
 	return num_total;
 }
 
-int CustomTextEdit::num_lines_from_rows(int p_line_from, int p_wrap_index_from, int visible_amount, int &wrap_index) const {
+int TextremeTextEdit::num_lines_from_rows(int p_line_from, int p_wrap_index_from, int visible_amount, int &wrap_index) const {
 
 	// Returns the number of lines (hidden and unhidden) from (p_line_from + p_wrap_index_from) row to (p_line_from + visible_amount of unhidden and wrapped rows).
 	// Wrap index is set to the wrap index of the last line.
@@ -5863,7 +5863,7 @@ int CustomTextEdit::num_lines_from_rows(int p_line_from, int p_wrap_index_from, 
 	return num_total;
 }
 
-int CustomTextEdit::get_last_unhidden_line() const {
+int TextremeTextEdit::get_last_unhidden_line() const {
 
 	// Returns the last line in the text that is not hidden.
 	if (!is_hiding_enabled())
@@ -5878,7 +5878,7 @@ int CustomTextEdit::get_last_unhidden_line() const {
 	return last_line;
 }
 
-int CustomTextEdit::get_indent_level(int p_line) const {
+int TextremeTextEdit::get_indent_level(int p_line) const {
 
 	ERR_FAIL_INDEX_V(p_line, text.size(), 0);
 
@@ -5898,7 +5898,7 @@ int CustomTextEdit::get_indent_level(int p_line) const {
 	return tab_count * indent_size + whitespace_count;
 }
 
-bool CustomTextEdit::is_line_comment(int p_line) const {
+bool TextremeTextEdit::is_line_comment(int p_line) const {
 
 	// Checks to see if this line is the start of a comment.
 	ERR_FAIL_INDEX_V(p_line, text.size(), false);
@@ -5919,7 +5919,7 @@ bool CustomTextEdit::is_line_comment(int p_line) const {
 	return false;
 }
 
-bool CustomTextEdit::can_fold(int p_line) const {
+bool TextremeTextEdit::can_fold(int p_line) const {
 
 	ERR_FAIL_INDEX_V(p_line, text.size(), false);
 	if (!is_hiding_enabled())
@@ -5953,7 +5953,7 @@ bool CustomTextEdit::can_fold(int p_line) const {
 	return false;
 }
 
-bool CustomTextEdit::is_folded(int p_line) const {
+bool TextremeTextEdit::is_folded(int p_line) const {
 
 	ERR_FAIL_INDEX_V(p_line, text.size(), false);
 	if (p_line + 1 >= text.size())
@@ -5961,7 +5961,7 @@ bool CustomTextEdit::is_folded(int p_line) const {
 	return !is_line_hidden(p_line) && is_line_hidden(p_line + 1);
 }
 
-Vector<int> CustomTextEdit::get_folded_lines() const {
+Vector<int> TextremeTextEdit::get_folded_lines() const {
 	Vector<int> folded_lines;
 
 	for (int i = 0; i < text.size(); i++) {
@@ -5972,7 +5972,7 @@ Vector<int> CustomTextEdit::get_folded_lines() const {
 	return folded_lines;
 }
 
-void CustomTextEdit::fold_line(int p_line) {
+void TextremeTextEdit::fold_line(int p_line) {
 
 	ERR_FAIL_INDEX(p_line, text.size());
 	if (!is_hiding_enabled())
@@ -6018,7 +6018,7 @@ void CustomTextEdit::fold_line(int p_line) {
 	update();
 }
 
-void CustomTextEdit::unfold_line(int p_line) {
+void TextremeTextEdit::unfold_line(int p_line) {
 
 	ERR_FAIL_INDEX(p_line, text.size());
 
@@ -6042,7 +6042,7 @@ void CustomTextEdit::unfold_line(int p_line) {
 	update();
 }
 
-void CustomTextEdit::toggle_fold_line(int p_line) {
+void TextremeTextEdit::toggle_fold_line(int p_line) {
 
 	ERR_FAIL_INDEX(p_line, text.size());
 
@@ -6052,12 +6052,12 @@ void CustomTextEdit::toggle_fold_line(int p_line) {
 		unfold_line(p_line);
 }
 
-int CustomTextEdit::get_line_count() const {
+int TextremeTextEdit::get_line_count() const {
 
 	return text.size();
 }
 
-void CustomTextEdit::_do_text_op(const TextOperation &p_op, bool p_reverse) {
+void TextremeTextEdit::_do_text_op(const TextOperation &p_op, bool p_reverse) {
 
 	ERR_FAIL_COND(p_op.type == TextOperation::TYPE_NONE);
 
@@ -6078,7 +6078,7 @@ void CustomTextEdit::_do_text_op(const TextOperation &p_op, bool p_reverse) {
 	}
 }
 
-void CustomTextEdit::_clear_redo() {
+void TextremeTextEdit::_clear_redo() {
 
 	if (undo_stack_pos == NULL)
 		return; // Nothing to clear.
@@ -6092,7 +6092,7 @@ void CustomTextEdit::_clear_redo() {
 	}
 }
 
-void CustomTextEdit::undo() {
+void TextremeTextEdit::undo() {
 
 	_push_current_op();
 
@@ -6141,7 +6141,7 @@ void CustomTextEdit::undo() {
 	update();
 }
 
-void CustomTextEdit::redo() {
+void TextremeTextEdit::redo() {
 
 	_push_current_op();
 
@@ -6173,7 +6173,7 @@ void CustomTextEdit::redo() {
 	update();
 }
 
-void CustomTextEdit::clear_undo_history() {
+void TextremeTextEdit::clear_undo_history() {
 
 	saved_version = 0;
 	current_op.type = TextOperation::TYPE_NONE;
@@ -6181,12 +6181,12 @@ void CustomTextEdit::clear_undo_history() {
 	undo_stack.clear();
 }
 
-void CustomTextEdit::begin_complex_operation() {
+void TextremeTextEdit::begin_complex_operation() {
 	_push_current_op();
 	next_operation_is_complex = true;
 }
 
-void CustomTextEdit::end_complex_operation() {
+void TextremeTextEdit::end_complex_operation() {
 
 	_push_current_op();
 	ERR_FAIL_COND(undo_stack.size() == 0);
@@ -6199,7 +6199,7 @@ void CustomTextEdit::end_complex_operation() {
 	undo_stack.back()->get().chain_backward = true;
 }
 
-void CustomTextEdit::_push_current_op() {
+void TextremeTextEdit::_push_current_op() {
 
 	if (current_op.type == TextOperation::TYPE_NONE)
 		return; // Nothing to do.
@@ -6219,15 +6219,15 @@ void CustomTextEdit::_push_current_op() {
 	}
 }
 
-void CustomTextEdit::set_indent_using_spaces(const bool p_use_spaces) {
+void TextremeTextEdit::set_indent_using_spaces(const bool p_use_spaces) {
 	indent_using_spaces = p_use_spaces;
 }
 
-bool CustomTextEdit::is_indent_using_spaces() const {
+bool TextremeTextEdit::is_indent_using_spaces() const {
 	return indent_using_spaces;
 }
 
-void CustomTextEdit::set_indent_size(const int p_size) {
+void TextremeTextEdit::set_indent_size(const int p_size) {
 	ERR_FAIL_COND_MSG(p_size <= 0, "Indend size must be greater than 0.");
 	indent_size = p_size;
 	text.set_indent_size(p_size);
@@ -6240,68 +6240,68 @@ void CustomTextEdit::set_indent_size(const int p_size) {
 	update();
 }
 
-int CustomTextEdit::get_indent_size() {
+int TextremeTextEdit::get_indent_size() {
 
 	return indent_size;
 }
 
-void CustomTextEdit::set_draw_tabs(bool p_draw) {
+void TextremeTextEdit::set_draw_tabs(bool p_draw) {
 
 	draw_tabs = p_draw;
 	update();
 }
 
-bool CustomTextEdit::is_drawing_tabs() const {
+bool TextremeTextEdit::is_drawing_tabs() const {
 
 	return draw_tabs;
 }
 
-void CustomTextEdit::set_draw_spaces(bool p_draw) {
+void TextremeTextEdit::set_draw_spaces(bool p_draw) {
 
 	draw_spaces = p_draw;
 }
 
-bool CustomTextEdit::is_drawing_spaces() const {
+bool TextremeTextEdit::is_drawing_spaces() const {
 
 	return draw_spaces;
 }
 
-void CustomTextEdit::set_override_selected_font_color(bool p_override_selected_font_color) {
+void TextremeTextEdit::set_override_selected_font_color(bool p_override_selected_font_color) {
 	override_selected_font_color = p_override_selected_font_color;
 }
 
-bool CustomTextEdit::is_overriding_selected_font_color() const {
+bool TextremeTextEdit::is_overriding_selected_font_color() const {
 	return override_selected_font_color;
 }
 
-void CustomTextEdit::set_insert_mode(bool p_enabled) {
+void TextremeTextEdit::set_insert_mode(bool p_enabled) {
 	insert_mode = p_enabled;
 	update();
 }
 
-bool CustomTextEdit::is_insert_mode() const {
+bool TextremeTextEdit::is_insert_mode() const {
 	return insert_mode;
 }
 
-bool CustomTextEdit::is_insert_text_operation() {
+bool TextremeTextEdit::is_insert_text_operation() {
 	return (current_op.type == TextOperation::TYPE_INSERT);
 }
 
-uint32_t CustomTextEdit::get_version() const {
+uint32_t TextremeTextEdit::get_version() const {
 	return current_op.version;
 }
 
-uint32_t CustomTextEdit::get_saved_version() const {
+uint32_t TextremeTextEdit::get_saved_version() const {
 
 	return saved_version;
 }
 
-void CustomTextEdit::tag_saved_version() {
+void TextremeTextEdit::tag_saved_version() {
 
 	saved_version = get_version();
 }
 
-double CustomTextEdit::get_scroll_pos_for_line(int p_line, int p_wrap_index) const {
+double TextremeTextEdit::get_scroll_pos_for_line(int p_line, int p_wrap_index) const {
 
 	if (!is_wrap_enabled() && !is_hiding_enabled())
 		return p_line;
@@ -6319,12 +6319,12 @@ double CustomTextEdit::get_scroll_pos_for_line(int p_line, int p_wrap_index) con
 	return new_line_scroll_pos;
 }
 
-void CustomTextEdit::set_line_as_first_visible(int p_line, int p_wrap_index) {
+void TextremeTextEdit::set_line_as_first_visible(int p_line, int p_wrap_index) {
 
 	set_v_scroll(get_scroll_pos_for_line(p_line, p_wrap_index));
 }
 
-void CustomTextEdit::set_line_as_center_visible(int p_line, int p_wrap_index) {
+void TextremeTextEdit::set_line_as_center_visible(int p_line, int p_wrap_index) {
 
 	int visible_rows = get_visible_rows();
 	int wi;
@@ -6333,7 +6333,7 @@ void CustomTextEdit::set_line_as_center_visible(int p_line, int p_wrap_index) {
 	set_v_scroll(get_scroll_pos_for_line(first_line, wi));
 }
 
-void CustomTextEdit::set_line_as_last_visible(int p_line, int p_wrap_index) {
+void TextremeTextEdit::set_line_as_last_visible(int p_line, int p_wrap_index) {
 
 	int wi;
 	int first_line = p_line - num_lines_from_rows(p_line, p_wrap_index, -get_visible_rows() - 1, wi) + 1;
@@ -6341,12 +6341,12 @@ void CustomTextEdit::set_line_as_last_visible(int p_line, int p_wrap_index) {
 	set_v_scroll(get_scroll_pos_for_line(first_line, wi) + get_visible_rows_offset());
 }
 
-int CustomTextEdit::get_first_visible_line() const {
+int TextremeTextEdit::get_first_visible_line() const {
 
 	return CLAMP(cursor.line_ofs, 0, text.size() - 1);
 }
 
-int CustomTextEdit::get_last_visible_line() const {
+int TextremeTextEdit::get_last_visible_line() const {
 
 	int first_vis_line = get_first_visible_line();
 	int last_vis_line = 0;
@@ -6356,7 +6356,7 @@ int CustomTextEdit::get_last_visible_line() const {
 	return last_vis_line;
 }
 
-int CustomTextEdit::get_last_visible_line_wrap_index() const {
+int TextremeTextEdit::get_last_visible_line_wrap_index() const {
 
 	int first_vis_line = get_first_visible_line();
 	int wi;
@@ -6364,7 +6364,7 @@ int CustomTextEdit::get_last_visible_line_wrap_index() const {
 	return wi;
 }
 
-double CustomTextEdit::get_visible_rows_offset() const {
+double TextremeTextEdit::get_visible_rows_offset() const {
 
 	double total = _get_control_height();
 	total /= (double)get_row_height();
@@ -6373,18 +6373,18 @@ double CustomTextEdit::get_visible_rows_offset() const {
 	return total;
 }
 
-double CustomTextEdit::get_v_scroll_offset() const {
+double TextremeTextEdit::get_v_scroll_offset() const {
 
 	double val = get_v_scroll() - floor(get_v_scroll());
 	return CLAMP(val, 0, 1);
 }
 
-double CustomTextEdit::get_v_scroll() const {
+double TextremeTextEdit::get_v_scroll() const {
 
 	return v_scroll->get_value();
 }
 
-void CustomTextEdit::set_v_scroll(double p_scroll) {
+void TextremeTextEdit::set_v_scroll(double p_scroll) {
 
 	v_scroll->set_value(p_scroll);
 	int max_v_scroll = v_scroll->get_max() - v_scroll->get_page();
@@ -6392,12 +6392,12 @@ void CustomTextEdit::set_v_scroll(double p_scroll) {
 		_scroll_moved(v_scroll->get_value());
 }
 
-int CustomTextEdit::get_h_scroll() const {
+int TextremeTextEdit::get_h_scroll() const {
 
 	return h_scroll->get_value();
 }
 
-void CustomTextEdit::set_h_scroll(int p_scroll) {
+void TextremeTextEdit::set_h_scroll(int p_scroll) {
 
 	if (p_scroll < 0) {
 		p_scroll = 0;
@@ -6405,28 +6405,28 @@ void CustomTextEdit::set_h_scroll(int p_scroll) {
 	h_scroll->set_value(p_scroll);
 }
 
-void CustomTextEdit::set_smooth_scroll_enabled(bool p_enable) {
+void TextremeTextEdit::set_smooth_scroll_enabled(bool p_enable) {
 
 	v_scroll->set_smooth_scroll_enabled(p_enable);
 	smooth_scroll_enabled = p_enable;
 }
 
-bool CustomTextEdit::is_smooth_scroll_enabled() const {
+bool TextremeTextEdit::is_smooth_scroll_enabled() const {
 
 	return smooth_scroll_enabled;
 }
 
-void CustomTextEdit::set_v_scroll_speed(float p_speed) {
+void TextremeTextEdit::set_v_scroll_speed(float p_speed) {
 
 	v_scroll_speed = p_speed;
 }
 
-float CustomTextEdit::get_v_scroll_speed() const {
+float TextremeTextEdit::get_v_scroll_speed() const {
 
 	return v_scroll_speed;
 }
 
-void CustomTextEdit::set_completion(bool p_enabled, const Vector<String> &p_prefixes) {
+void TextremeTextEdit::set_completion(bool p_enabled, const Vector<String> &p_prefixes) {
 
 	completion_prefixes.clear();
 	completion_enabled = p_enabled;
@@ -6434,7 +6434,7 @@ void CustomTextEdit::set_completion(bool p_enabled, const Vector<String> &p_pref
 		completion_prefixes.insert(p_prefixes[i]);
 }
 
-void CustomTextEdit::_confirm_completion() {
+void TextremeTextEdit::_confirm_completion() {
 
 	begin_complex_operation();
 
@@ -6477,13 +6477,13 @@ void CustomTextEdit::_confirm_completion() {
 	}
 }
 
-void CustomTextEdit::_cancel_code_hint() {
+void TextremeTextEdit::_cancel_code_hint() {
 
 	completion_hint = "";
 	update();
 }
 
-void CustomTextEdit::_cancel_completion() {
+void TextremeTextEdit::_cancel_completion() {
 
 	if (!completion_active)
 		return;
@@ -6498,7 +6498,7 @@ static bool _is_completable(CharType c) {
 	return !_is_symbol(c) || c == '"' || c == '\'';
 }
 
-void CustomTextEdit::_update_completion_candidates() {
+void TextremeTextEdit::_update_completion_candidates() {
 
 	String l = text[cursor.line];
 	int cofs = CLAMP(cursor.column, 0, l.length());
@@ -6640,7 +6640,7 @@ void CustomTextEdit::_update_completion_candidates() {
 	completion_enabled = true;
 }
 
-void CustomTextEdit::query_code_comple() {
+void TextremeTextEdit::query_code_comple() {
 
 	String l = text[cursor.line];
 	int ofs = CLAMP(cursor.column, 0, l.length());
@@ -6680,14 +6680,14 @@ void CustomTextEdit::query_code_comple() {
 	}
 }
 
-void CustomTextEdit::set_code_hint(const String &p_hint) {
+void TextremeTextEdit::set_code_hint(const String &p_hint) {
 
 	completion_hint = p_hint;
 	completion_hint_offset = -0xFFFF;
 	update();
 }
 
-void CustomTextEdit::code_complete(const List<ScriptCodeCompletionOption> &p_strings, bool p_forced) {
+void TextremeTextEdit::code_complete(const List<ScriptCodeCompletionOption> &p_strings, bool p_forced) {
 
 	completion_sources = p_strings;
 	completion_active = true;
@@ -6697,7 +6697,7 @@ void CustomTextEdit::code_complete(const List<ScriptCodeCompletionOption> &p_str
 	_update_completion_candidates();
 }
 
-String CustomTextEdit::get_word_at_pos(const Vector2 &p_pos) const {
+String TextremeTextEdit::get_word_at_pos(const Vector2 &p_pos) const {
 
 	int row, col;
 	_get_mouse_pos(p_pos, row, col);
@@ -6736,7 +6736,7 @@ String CustomTextEdit::get_word_at_pos(const Vector2 &p_pos) const {
 	return String();
 }
 
-String CustomTextEdit::get_tooltip(const Point2 &p_pos) const {
+String TextremeTextEdit::get_tooltip(const Point2 &p_pos) const {
 
 	if (!tooltip_obj)
 		return Control::get_tooltip(p_pos);
@@ -6757,14 +6757,14 @@ String CustomTextEdit::get_tooltip(const Point2 &p_pos) const {
 	return Control::get_tooltip(p_pos);
 }
 
-void CustomTextEdit::set_tooltip_request_func(Object *p_obj, const StringName &p_function, const Variant &p_udata) {
+void TextremeTextEdit::set_tooltip_request_func(Object *p_obj, const StringName &p_function, const Variant &p_udata) {
 
 	tooltip_obj = p_obj;
 	tooltip_func = p_function;
 	tooltip_ud = p_udata;
 }
 
-void CustomTextEdit::set_line(int line, String new_text) {
+void TextremeTextEdit::set_line(int line, String new_text) {
 	if (line < 0 || line > text.size())
 		return;
 	_remove_text(line, 0, line, text[line].length());
@@ -6777,7 +6777,7 @@ void CustomTextEdit::set_line(int line, String new_text) {
 	}
 }
 
-void CustomTextEdit::insert_at(const String &p_text, int at) {
+void TextremeTextEdit::insert_at(const String &p_text, int at) {
 	_insert_text(at, 0, p_text + "\n");
 	if (cursor.line >= at) {
 		// offset cursor when located after inserted line
@@ -6795,139 +6795,139 @@ void CustomTextEdit::insert_at(const String &p_text, int at) {
 	}
 }
 
-void CustomTextEdit::set_show_line_numbers(bool p_show) {
+void TextremeTextEdit::set_show_line_numbers(bool p_show) {
 
 	line_numbers = p_show;
 	update();
 }
 
-void CustomTextEdit::set_line_numbers_zero_padded(bool p_zero_padded) {
+void TextremeTextEdit::set_line_numbers_zero_padded(bool p_zero_padded) {
 
 	line_numbers_zero_padded = p_zero_padded;
 	update();
 }
 
-bool CustomTextEdit::is_show_line_numbers_enabled() const {
+bool TextremeTextEdit::is_show_line_numbers_enabled() const {
 	return line_numbers;
 }
 
-void CustomTextEdit::set_show_line_length_guideline(bool p_show) {
+void TextremeTextEdit::set_show_line_length_guideline(bool p_show) {
 	line_length_guideline = p_show;
 	update();
 }
 
-void CustomTextEdit::set_line_length_guideline_column(int p_column) {
+void TextremeTextEdit::set_line_length_guideline_column(int p_column) {
 	line_length_guideline_col = p_column;
 	update();
 }
 
-void CustomTextEdit::set_bookmark_gutter_enabled(bool p_draw) {
+void TextremeTextEdit::set_bookmark_gutter_enabled(bool p_draw) {
 	draw_bookmark_gutter = p_draw;
 	update();
 }
 
-bool CustomTextEdit::is_bookmark_gutter_enabled() const {
+bool TextremeTextEdit::is_bookmark_gutter_enabled() const {
 	return draw_bookmark_gutter;
 }
 
-void CustomTextEdit::set_breakpoint_gutter_enabled(bool p_draw) {
+void TextremeTextEdit::set_breakpoint_gutter_enabled(bool p_draw) {
 	draw_breakpoint_gutter = p_draw;
 	update();
 }
 
-bool CustomTextEdit::is_breakpoint_gutter_enabled() const {
+bool TextremeTextEdit::is_breakpoint_gutter_enabled() const {
 	return draw_breakpoint_gutter;
 }
 
-void CustomTextEdit::set_breakpoint_gutter_width(int p_gutter_width) {
+void TextremeTextEdit::set_breakpoint_gutter_width(int p_gutter_width) {
 	breakpoint_gutter_width = p_gutter_width;
 	update();
 }
 
-int CustomTextEdit::get_breakpoint_gutter_width() const {
+int TextremeTextEdit::get_breakpoint_gutter_width() const {
 	return cache.breakpoint_gutter_width;
 }
 
-void CustomTextEdit::set_draw_fold_gutter(bool p_draw) {
+void TextremeTextEdit::set_draw_fold_gutter(bool p_draw) {
 	draw_fold_gutter = p_draw;
 	update();
 }
 
-bool CustomTextEdit::is_drawing_fold_gutter() const {
+bool TextremeTextEdit::is_drawing_fold_gutter() const {
 	return draw_fold_gutter;
 }
 
-void CustomTextEdit::set_fold_gutter_width(int p_gutter_width) {
+void TextremeTextEdit::set_fold_gutter_width(int p_gutter_width) {
 	fold_gutter_width = p_gutter_width;
 	update();
 }
 
-int CustomTextEdit::get_fold_gutter_width() const {
+int TextremeTextEdit::get_fold_gutter_width() const {
 	return cache.fold_gutter_width;
 }
 
-void CustomTextEdit::set_draw_info_gutter(bool p_draw) {
+void TextremeTextEdit::set_draw_info_gutter(bool p_draw) {
 	draw_info_gutter = p_draw;
 	update();
 }
 
-bool CustomTextEdit::is_drawing_info_gutter() const {
+bool TextremeTextEdit::is_drawing_info_gutter() const {
 	return draw_info_gutter;
 }
 
-void CustomTextEdit::set_info_gutter_width(int p_gutter_width) {
+void TextremeTextEdit::set_info_gutter_width(int p_gutter_width) {
 	info_gutter_width = p_gutter_width;
 	update();
 }
 
-int CustomTextEdit::get_info_gutter_width() const {
+int TextremeTextEdit::get_info_gutter_width() const {
 	return info_gutter_width;
 }
 
-void CustomTextEdit::set_draw_minimap(bool p_draw) {
+void TextremeTextEdit::set_draw_minimap(bool p_draw) {
 	draw_minimap = p_draw;
 	update();
 }
 
-bool CustomTextEdit::is_drawing_minimap() const {
+bool TextremeTextEdit::is_drawing_minimap() const {
 	return draw_minimap;
 }
 
-void CustomTextEdit::set_minimap_width(int p_minimap_width) {
+void TextremeTextEdit::set_minimap_width(int p_minimap_width) {
 	minimap_width = p_minimap_width;
 	update();
 }
 
-int CustomTextEdit::get_minimap_width() const {
+int TextremeTextEdit::get_minimap_width() const {
 	return minimap_width;
 }
 
-void CustomTextEdit::set_hiding_enabled(bool p_enabled) {
+void TextremeTextEdit::set_hiding_enabled(bool p_enabled) {
 	if (!p_enabled)
 		unhide_all_lines();
 	hiding_enabled = p_enabled;
 	update();
 }
 
-bool CustomTextEdit::is_hiding_enabled() const {
+bool TextremeTextEdit::is_hiding_enabled() const {
 	return hiding_enabled;
 }
 
-void CustomTextEdit::set_highlight_current_line(bool p_enabled) {
+void TextremeTextEdit::set_highlight_current_line(bool p_enabled) {
 	highlight_current_line = p_enabled;
 	update();
 }
 
-bool CustomTextEdit::is_highlight_current_line_enabled() const {
+bool TextremeTextEdit::is_highlight_current_line_enabled() const {
 	return highlight_current_line;
 }
 
-bool CustomTextEdit::is_text_field() const {
+bool TextremeTextEdit::is_text_field() const {
 
 	return true;
 }
 
-void CustomTextEdit::menu_option(int p_option) {
+void TextremeTextEdit::menu_option(int p_option) {
 
 	switch (p_option) {
 		case MENU_CUT: {
@@ -6960,31 +6960,31 @@ void CustomTextEdit::menu_option(int p_option) {
 	}
 }
 
-void CustomTextEdit::set_select_identifiers_on_hover(bool p_enable) {
+void TextremeTextEdit::set_select_identifiers_on_hover(bool p_enable) {
 
 	select_identifiers_enabled = p_enable;
 }
 
-bool CustomTextEdit::is_selecting_identifiers_on_hover_enabled() const {
+bool TextremeTextEdit::is_selecting_identifiers_on_hover_enabled() const {
 
 	return select_identifiers_enabled;
 }
 
-void CustomTextEdit::set_context_menu_enabled(bool p_enable) {
+void TextremeTextEdit::set_context_menu_enabled(bool p_enable) {
 	context_menu_enabled = p_enable;
 }
 
-bool CustomTextEdit::is_context_menu_enabled() {
+bool TextremeTextEdit::is_context_menu_enabled() {
 	return context_menu_enabled;
 }
 
-void CustomTextEdit::set_shortcut_keys_enabled(bool p_enabled) {
+void TextremeTextEdit::set_shortcut_keys_enabled(bool p_enabled) {
 	shortcut_keys_enabled = p_enabled;
 
 	_generate_context_menu();
 }
 
-void CustomTextEdit::set_selecting_enabled(bool p_enabled) {
+void TextremeTextEdit::set_selecting_enabled(bool p_enabled) {
 	selecting_enabled = p_enabled;
 
 	if (!selecting_enabled)
@@ -6993,29 +6993,29 @@ void CustomTextEdit::set_selecting_enabled(bool p_enabled) {
 	_generate_context_menu();
 }
 
-bool CustomTextEdit::is_selecting_enabled() const {
+bool TextremeTextEdit::is_selecting_enabled() const {
 	return selecting_enabled;
 }
 
-bool CustomTextEdit::is_shortcut_keys_enabled() const {
+bool TextremeTextEdit::is_shortcut_keys_enabled() const {
 	return shortcut_keys_enabled;
 }
 
-PopupMenu *CustomTextEdit::get_menu() const {
+PopupMenu *TextremeTextEdit::get_menu() const {
 	return menu;
 }
 
-void CustomTextEdit::_bind_methods() {
+void TextremeTextEdit::_bind_methods() {
 
-	ClassDB::bind_method(D_METHOD("_gui_input"), &CustomTextEdit::_gui_input);
-	ClassDB::bind_method(D_METHOD("_scroll_moved"), &CustomTextEdit::_scroll_moved);
-	ClassDB::bind_method(D_METHOD("_cursor_changed_emit"), &CustomTextEdit::_cursor_changed_emit);
-	ClassDB::bind_method(D_METHOD("_text_changed_emit"), &CustomTextEdit::_text_changed_emit);
-	ClassDB::bind_method(D_METHOD("_push_current_op"), &CustomTextEdit::_push_current_op);
-	ClassDB::bind_method(D_METHOD("_click_selection_held"), &CustomTextEdit::_click_selection_held);
-	ClassDB::bind_method(D_METHOD("_toggle_draw_caret"), &CustomTextEdit::_toggle_draw_caret);
-	ClassDB::bind_method(D_METHOD("_v_scroll_input"), &CustomTextEdit::_v_scroll_input);
-	ClassDB::bind_method(D_METHOD("_update_wrap_at"), &CustomTextEdit::_update_wrap_at);
+	ClassDB::bind_method(D_METHOD("_gui_input"), &TextremeTextEdit::_gui_input);
+	ClassDB::bind_method(D_METHOD("_scroll_moved"), &TextremeTextEdit::_scroll_moved);
+	ClassDB::bind_method(D_METHOD("_cursor_changed_emit"), &TextremeTextEdit::_cursor_changed_emit);
+	ClassDB::bind_method(D_METHOD("_text_changed_emit"), &TextremeTextEdit::_text_changed_emit);
+	ClassDB::bind_method(D_METHOD("_push_current_op"), &TextremeTextEdit::_push_current_op);
+	ClassDB::bind_method(D_METHOD("_click_selection_held"), &TextremeTextEdit::_click_selection_held);
+	ClassDB::bind_method(D_METHOD("_toggle_draw_caret"), &TextremeTextEdit::_toggle_draw_caret);
+	ClassDB::bind_method(D_METHOD("_v_scroll_input"), &TextremeTextEdit::_v_scroll_input);
+	ClassDB::bind_method(D_METHOD("_update_wrap_at"), &TextremeTextEdit::_update_wrap_at);
 
 	BIND_ENUM_CONSTANT(SEARCH_MATCH_CASE);
 	BIND_ENUM_CONSTANT(SEARCH_WHOLE_WORDS);
@@ -7025,126 +7025,126 @@ void CustomTextEdit::_bind_methods() {
 	BIND_ENUM_CONSTANT(SEARCH_RESULT_LINE);
 
 	/*
-	ClassDB::bind_method(D_METHOD("delete_char"),&CustomTextEdit::delete_char);
-	ClassDB::bind_method(D_METHOD("delete_line"),&CustomTextEdit::delete_line);
+	ClassDB::bind_method(D_METHOD("delete_char"),&TextremeTextEdit::delete_char);
+	ClassDB::bind_method(D_METHOD("delete_line"),&TextremeTextEdit::delete_line);
 */
 
-	ClassDB::bind_method(D_METHOD("set_text", "text"), &CustomTextEdit::set_text);
-	ClassDB::bind_method(D_METHOD("insert_text_at_cursor", "text"), &CustomTextEdit::insert_text_at_cursor);
+	ClassDB::bind_method(D_METHOD("set_text", "text"), &TextremeTextEdit::set_text);
+	ClassDB::bind_method(D_METHOD("insert_text_at_cursor", "text"), &TextremeTextEdit::insert_text_at_cursor);
 
-	ClassDB::bind_method(D_METHOD("get_line_count"), &CustomTextEdit::get_line_count);
-	ClassDB::bind_method(D_METHOD("get_text"), &CustomTextEdit::get_text);
-	ClassDB::bind_method(D_METHOD("get_line", "line"), &CustomTextEdit::get_line);
-	ClassDB::bind_method(D_METHOD("set_line", "line", "new_text"), &CustomTextEdit::set_line);
+	ClassDB::bind_method(D_METHOD("get_line_count"), &TextremeTextEdit::get_line_count);
+	ClassDB::bind_method(D_METHOD("get_text"), &TextremeTextEdit::get_text);
+	ClassDB::bind_method(D_METHOD("get_line", "line"), &TextremeTextEdit::get_line);
+	ClassDB::bind_method(D_METHOD("set_line", "line", "new_text"), &TextremeTextEdit::set_line);
 
-	ClassDB::bind_method(D_METHOD("center_viewport_to_cursor"), &CustomTextEdit::center_viewport_to_cursor);
-	ClassDB::bind_method(D_METHOD("cursor_set_column", "column", "adjust_viewport"), &CustomTextEdit::cursor_set_column, DEFVAL(true));
-	ClassDB::bind_method(D_METHOD("cursor_set_line", "line", "adjust_viewport", "can_be_hidden", "wrap_index"), &CustomTextEdit::cursor_set_line, DEFVAL(true), DEFVAL(true), DEFVAL(0));
+	ClassDB::bind_method(D_METHOD("center_viewport_to_cursor"), &TextremeTextEdit::center_viewport_to_cursor);
+	ClassDB::bind_method(D_METHOD("cursor_set_column", "column", "adjust_viewport"), &TextremeTextEdit::cursor_set_column, DEFVAL(true));
+	ClassDB::bind_method(D_METHOD("cursor_set_line", "line", "adjust_viewport", "can_be_hidden", "wrap_index"), &TextremeTextEdit::cursor_set_line, DEFVAL(true), DEFVAL(true), DEFVAL(0));
 
-	ClassDB::bind_method(D_METHOD("cursor_get_column"), &CustomTextEdit::cursor_get_column);
-	ClassDB::bind_method(D_METHOD("cursor_get_line"), &CustomTextEdit::cursor_get_line);
-	ClassDB::bind_method(D_METHOD("cursor_set_blink_enabled", "enable"), &CustomTextEdit::cursor_set_blink_enabled);
-	ClassDB::bind_method(D_METHOD("cursor_get_blink_enabled"), &CustomTextEdit::cursor_get_blink_enabled);
-	ClassDB::bind_method(D_METHOD("cursor_set_blink_speed", "blink_speed"), &CustomTextEdit::cursor_set_blink_speed);
-	ClassDB::bind_method(D_METHOD("cursor_get_blink_speed"), &CustomTextEdit::cursor_get_blink_speed);
-	ClassDB::bind_method(D_METHOD("cursor_set_block_mode", "enable"), &CustomTextEdit::cursor_set_block_mode);
-	ClassDB::bind_method(D_METHOD("cursor_is_block_mode"), &CustomTextEdit::cursor_is_block_mode);
+	ClassDB::bind_method(D_METHOD("cursor_get_column"), &TextremeTextEdit::cursor_get_column);
+	ClassDB::bind_method(D_METHOD("cursor_get_line"), &TextremeTextEdit::cursor_get_line);
+	ClassDB::bind_method(D_METHOD("cursor_set_blink_enabled", "enable"), &TextremeTextEdit::cursor_set_blink_enabled);
+	ClassDB::bind_method(D_METHOD("cursor_get_blink_enabled"), &TextremeTextEdit::cursor_get_blink_enabled);
+	ClassDB::bind_method(D_METHOD("cursor_set_blink_speed", "blink_speed"), &TextremeTextEdit::cursor_set_blink_speed);
+	ClassDB::bind_method(D_METHOD("cursor_get_blink_speed"), &TextremeTextEdit::cursor_get_blink_speed);
+	ClassDB::bind_method(D_METHOD("cursor_set_block_mode", "enable"), &TextremeTextEdit::cursor_set_block_mode);
+	ClassDB::bind_method(D_METHOD("cursor_is_block_mode"), &TextremeTextEdit::cursor_is_block_mode);
 
-	ClassDB::bind_method(D_METHOD("set_right_click_moves_caret", "enable"), &CustomTextEdit::set_right_click_moves_caret);
-	ClassDB::bind_method(D_METHOD("is_right_click_moving_caret"), &CustomTextEdit::is_right_click_moving_caret);
+	ClassDB::bind_method(D_METHOD("set_right_click_moves_caret", "enable"), &TextremeTextEdit::set_right_click_moves_caret);
+	ClassDB::bind_method(D_METHOD("is_right_click_moving_caret"), &TextremeTextEdit::is_right_click_moving_caret);
 
-	ClassDB::bind_method(D_METHOD("set_readonly", "enable"), &CustomTextEdit::set_readonly);
-	ClassDB::bind_method(D_METHOD("is_readonly"), &CustomTextEdit::is_readonly);
+	ClassDB::bind_method(D_METHOD("set_readonly", "enable"), &TextremeTextEdit::set_readonly);
+	ClassDB::bind_method(D_METHOD("is_readonly"), &TextremeTextEdit::is_readonly);
 
-	ClassDB::bind_method(D_METHOD("set_wrap_enabled", "enable"), &CustomTextEdit::set_wrap_enabled);
-	ClassDB::bind_method(D_METHOD("is_wrap_enabled"), &CustomTextEdit::is_wrap_enabled);
-	ClassDB::bind_method(D_METHOD("set_context_menu_enabled", "enable"), &CustomTextEdit::set_context_menu_enabled);
-	ClassDB::bind_method(D_METHOD("is_context_menu_enabled"), &CustomTextEdit::is_context_menu_enabled);
-	ClassDB::bind_method(D_METHOD("set_shortcut_keys_enabled", "enable"), &CustomTextEdit::set_shortcut_keys_enabled);
-	ClassDB::bind_method(D_METHOD("is_shortcut_keys_enabled"), &CustomTextEdit::is_shortcut_keys_enabled);
-	ClassDB::bind_method(D_METHOD("set_selecting_enabled", "enable"), &CustomTextEdit::set_selecting_enabled);
-	ClassDB::bind_method(D_METHOD("is_selecting_enabled"), &CustomTextEdit::is_selecting_enabled);
+	ClassDB::bind_method(D_METHOD("set_wrap_enabled", "enable"), &TextremeTextEdit::set_wrap_enabled);
+	ClassDB::bind_method(D_METHOD("is_wrap_enabled"), &TextremeTextEdit::is_wrap_enabled);
+	ClassDB::bind_method(D_METHOD("set_context_menu_enabled", "enable"), &TextremeTextEdit::set_context_menu_enabled);
+	ClassDB::bind_method(D_METHOD("is_context_menu_enabled"), &TextremeTextEdit::is_context_menu_enabled);
+	ClassDB::bind_method(D_METHOD("set_shortcut_keys_enabled", "enable"), &TextremeTextEdit::set_shortcut_keys_enabled);
+	ClassDB::bind_method(D_METHOD("is_shortcut_keys_enabled"), &TextremeTextEdit::is_shortcut_keys_enabled);
+	ClassDB::bind_method(D_METHOD("set_selecting_enabled", "enable"), &TextremeTextEdit::set_selecting_enabled);
+	ClassDB::bind_method(D_METHOD("is_selecting_enabled"), &TextremeTextEdit::is_selecting_enabled);
 
-	ClassDB::bind_method(D_METHOD("cut"), &CustomTextEdit::cut);
-	ClassDB::bind_method(D_METHOD("copy"), &CustomTextEdit::copy);
-	ClassDB::bind_method(D_METHOD("paste"), &CustomTextEdit::paste);
+	ClassDB::bind_method(D_METHOD("cut"), &TextremeTextEdit::cut);
+	ClassDB::bind_method(D_METHOD("copy"), &TextremeTextEdit::copy);
+	ClassDB::bind_method(D_METHOD("paste"), &TextremeTextEdit::paste);
 
-	ClassDB::bind_method(D_METHOD("select", "from_line", "from_column", "to_line", "to_column"), &CustomTextEdit::select);
-	ClassDB::bind_method(D_METHOD("select_all"), &CustomTextEdit::select_all);
-	ClassDB::bind_method(D_METHOD("deselect"), &CustomTextEdit::deselect);
+	ClassDB::bind_method(D_METHOD("select", "from_line", "from_column", "to_line", "to_column"), &TextremeTextEdit::select);
+	ClassDB::bind_method(D_METHOD("select_all"), &TextremeTextEdit::select_all);
+	ClassDB::bind_method(D_METHOD("deselect"), &TextremeTextEdit::deselect);
 
-	ClassDB::bind_method(D_METHOD("is_selection_active"), &CustomTextEdit::is_selection_active);
-	ClassDB::bind_method(D_METHOD("get_selection_from_line"), &CustomTextEdit::get_selection_from_line);
-	ClassDB::bind_method(D_METHOD("get_selection_from_column"), &CustomTextEdit::get_selection_from_column);
-	ClassDB::bind_method(D_METHOD("get_selection_to_line"), &CustomTextEdit::get_selection_to_line);
-	ClassDB::bind_method(D_METHOD("get_selection_to_column"), &CustomTextEdit::get_selection_to_column);
-	ClassDB::bind_method(D_METHOD("get_selection_text"), &CustomTextEdit::get_selection_text);
-	ClassDB::bind_method(D_METHOD("get_word_under_cursor"), &CustomTextEdit::get_word_under_cursor);
-	ClassDB::bind_method(D_METHOD("search", "key", "flags", "from_line", "from_column"), &CustomTextEdit::_search_bind);
+	ClassDB::bind_method(D_METHOD("is_selection_active"), &TextremeTextEdit::is_selection_active);
+	ClassDB::bind_method(D_METHOD("get_selection_from_line"), &TextremeTextEdit::get_selection_from_line);
+	ClassDB::bind_method(D_METHOD("get_selection_from_column"), &TextremeTextEdit::get_selection_from_column);
+	ClassDB::bind_method(D_METHOD("get_selection_to_line"), &TextremeTextEdit::get_selection_to_line);
+	ClassDB::bind_method(D_METHOD("get_selection_to_column"), &TextremeTextEdit::get_selection_to_column);
+	ClassDB::bind_method(D_METHOD("get_selection_text"), &TextremeTextEdit::get_selection_text);
+	ClassDB::bind_method(D_METHOD("get_word_under_cursor"), &TextremeTextEdit::get_word_under_cursor);
+	ClassDB::bind_method(D_METHOD("search", "key", "flags", "from_line", "from_column"), &TextremeTextEdit::_search_bind);
 
-	ClassDB::bind_method(D_METHOD("undo"), &CustomTextEdit::undo);
-	ClassDB::bind_method(D_METHOD("redo"), &CustomTextEdit::redo);
-	ClassDB::bind_method(D_METHOD("clear_undo_history"), &CustomTextEdit::clear_undo_history);
+	ClassDB::bind_method(D_METHOD("undo"), &TextremeTextEdit::undo);
+	ClassDB::bind_method(D_METHOD("redo"), &TextremeTextEdit::redo);
+	ClassDB::bind_method(D_METHOD("clear_undo_history"), &TextremeTextEdit::clear_undo_history);
 
-	ClassDB::bind_method(D_METHOD("set_show_line_numbers", "enable"), &CustomTextEdit::set_show_line_numbers);
-	ClassDB::bind_method(D_METHOD("is_show_line_numbers_enabled"), &CustomTextEdit::is_show_line_numbers_enabled);
-	ClassDB::bind_method(D_METHOD("set_draw_tabs"), &CustomTextEdit::set_draw_tabs);
-	ClassDB::bind_method(D_METHOD("is_drawing_tabs"), &CustomTextEdit::is_drawing_tabs);
-	ClassDB::bind_method(D_METHOD("set_draw_spaces"), &CustomTextEdit::set_draw_spaces);
-	ClassDB::bind_method(D_METHOD("is_drawing_spaces"), &CustomTextEdit::is_drawing_spaces);
-	ClassDB::bind_method(D_METHOD("set_breakpoint_gutter_enabled", "enable"), &CustomTextEdit::set_breakpoint_gutter_enabled);
-	ClassDB::bind_method(D_METHOD("is_breakpoint_gutter_enabled"), &CustomTextEdit::is_breakpoint_gutter_enabled);
-	ClassDB::bind_method(D_METHOD("set_draw_fold_gutter"), &CustomTextEdit::set_draw_fold_gutter);
-	ClassDB::bind_method(D_METHOD("is_drawing_fold_gutter"), &CustomTextEdit::is_drawing_fold_gutter);
+	ClassDB::bind_method(D_METHOD("set_show_line_numbers", "enable"), &TextremeTextEdit::set_show_line_numbers);
+	ClassDB::bind_method(D_METHOD("is_show_line_numbers_enabled"), &TextremeTextEdit::is_show_line_numbers_enabled);
+	ClassDB::bind_method(D_METHOD("set_draw_tabs"), &TextremeTextEdit::set_draw_tabs);
+	ClassDB::bind_method(D_METHOD("is_drawing_tabs"), &TextremeTextEdit::is_drawing_tabs);
+	ClassDB::bind_method(D_METHOD("set_draw_spaces"), &TextremeTextEdit::set_draw_spaces);
+	ClassDB::bind_method(D_METHOD("is_drawing_spaces"), &TextremeTextEdit::is_drawing_spaces);
+	ClassDB::bind_method(D_METHOD("set_breakpoint_gutter_enabled", "enable"), &TextremeTextEdit::set_breakpoint_gutter_enabled);
+	ClassDB::bind_method(D_METHOD("is_breakpoint_gutter_enabled"), &TextremeTextEdit::is_breakpoint_gutter_enabled);
+	ClassDB::bind_method(D_METHOD("set_draw_fold_gutter"), &TextremeTextEdit::set_draw_fold_gutter);
+	ClassDB::bind_method(D_METHOD("is_drawing_fold_gutter"), &TextremeTextEdit::is_drawing_fold_gutter);
 
-	ClassDB::bind_method(D_METHOD("set_hiding_enabled", "enable"), &CustomTextEdit::set_hiding_enabled);
-	ClassDB::bind_method(D_METHOD("is_hiding_enabled"), &CustomTextEdit::is_hiding_enabled);
-	ClassDB::bind_method(D_METHOD("set_line_as_hidden", "line", "enable"), &CustomTextEdit::set_line_as_hidden);
-	ClassDB::bind_method(D_METHOD("is_line_hidden", "line"), &CustomTextEdit::is_line_hidden);
-	ClassDB::bind_method(D_METHOD("fold_all_lines"), &CustomTextEdit::fold_all_lines);
-	ClassDB::bind_method(D_METHOD("unhide_all_lines"), &CustomTextEdit::unhide_all_lines);
-	ClassDB::bind_method(D_METHOD("fold_line", "line"), &CustomTextEdit::fold_line);
-	ClassDB::bind_method(D_METHOD("unfold_line", "line"), &CustomTextEdit::unfold_line);
-	ClassDB::bind_method(D_METHOD("toggle_fold_line", "line"), &CustomTextEdit::toggle_fold_line);
-	ClassDB::bind_method(D_METHOD("can_fold", "line"), &CustomTextEdit::can_fold);
-	ClassDB::bind_method(D_METHOD("is_folded", "line"), &CustomTextEdit::is_folded);
+	ClassDB::bind_method(D_METHOD("set_hiding_enabled", "enable"), &TextremeTextEdit::set_hiding_enabled);
+	ClassDB::bind_method(D_METHOD("is_hiding_enabled"), &TextremeTextEdit::is_hiding_enabled);
+	ClassDB::bind_method(D_METHOD("set_line_as_hidden", "line", "enable"), &TextremeTextEdit::set_line_as_hidden);
+	ClassDB::bind_method(D_METHOD("is_line_hidden", "line"), &TextremeTextEdit::is_line_hidden);
+	ClassDB::bind_method(D_METHOD("fold_all_lines"), &TextremeTextEdit::fold_all_lines);
+	ClassDB::bind_method(D_METHOD("unhide_all_lines"), &TextremeTextEdit::unhide_all_lines);
+	ClassDB::bind_method(D_METHOD("fold_line", "line"), &TextremeTextEdit::fold_line);
+	ClassDB::bind_method(D_METHOD("unfold_line", "line"), &TextremeTextEdit::unfold_line);
+	ClassDB::bind_method(D_METHOD("toggle_fold_line", "line"), &TextremeTextEdit::toggle_fold_line);
+	ClassDB::bind_method(D_METHOD("can_fold", "line"), &TextremeTextEdit::can_fold);
+	ClassDB::bind_method(D_METHOD("is_folded", "line"), &TextremeTextEdit::is_folded);
 
-	ClassDB::bind_method(D_METHOD("set_highlight_all_occurrences", "enable"), &CustomTextEdit::set_highlight_all_occurrences);
-	ClassDB::bind_method(D_METHOD("is_highlight_all_occurrences_enabled"), &CustomTextEdit::is_highlight_all_occurrences_enabled);
+	ClassDB::bind_method(D_METHOD("set_highlight_all_occurrences", "enable"), &TextremeTextEdit::set_highlight_all_occurrences);
+	ClassDB::bind_method(D_METHOD("is_highlight_all_occurrences_enabled"), &TextremeTextEdit::is_highlight_all_occurrences_enabled);
 
-	ClassDB::bind_method(D_METHOD("set_override_selected_font_color", "override"), &CustomTextEdit::set_override_selected_font_color);
-	ClassDB::bind_method(D_METHOD("is_overriding_selected_font_color"), &CustomTextEdit::is_overriding_selected_font_color);
+	ClassDB::bind_method(D_METHOD("set_override_selected_font_color", "override"), &TextremeTextEdit::set_override_selected_font_color);
+	ClassDB::bind_method(D_METHOD("is_overriding_selected_font_color"), &TextremeTextEdit::is_overriding_selected_font_color);
 
-	ClassDB::bind_method(D_METHOD("set_syntax_coloring", "enable"), &CustomTextEdit::set_syntax_coloring);
-	ClassDB::bind_method(D_METHOD("is_syntax_coloring_enabled"), &CustomTextEdit::is_syntax_coloring_enabled);
+	ClassDB::bind_method(D_METHOD("set_syntax_coloring", "enable"), &TextremeTextEdit::set_syntax_coloring);
+	ClassDB::bind_method(D_METHOD("is_syntax_coloring_enabled"), &TextremeTextEdit::is_syntax_coloring_enabled);
 
-	ClassDB::bind_method(D_METHOD("set_highlight_current_line", "enabled"), &CustomTextEdit::set_highlight_current_line);
-	ClassDB::bind_method(D_METHOD("is_highlight_current_line_enabled"), &CustomTextEdit::is_highlight_current_line_enabled);
+	ClassDB::bind_method(D_METHOD("set_highlight_current_line", "enabled"), &TextremeTextEdit::set_highlight_current_line);
+	ClassDB::bind_method(D_METHOD("is_highlight_current_line_enabled"), &TextremeTextEdit::is_highlight_current_line_enabled);
 
-	ClassDB::bind_method(D_METHOD("set_smooth_scroll_enable", "enable"), &CustomTextEdit::set_smooth_scroll_enabled);
-	ClassDB::bind_method(D_METHOD("is_smooth_scroll_enabled"), &CustomTextEdit::is_smooth_scroll_enabled);
-	ClassDB::bind_method(D_METHOD("set_v_scroll_speed", "speed"), &CustomTextEdit::set_v_scroll_speed);
-	ClassDB::bind_method(D_METHOD("get_v_scroll_speed"), &CustomTextEdit::get_v_scroll_speed);
-	ClassDB::bind_method(D_METHOD("set_v_scroll", "value"), &CustomTextEdit::set_v_scroll);
-	ClassDB::bind_method(D_METHOD("get_v_scroll"), &CustomTextEdit::get_v_scroll);
-	ClassDB::bind_method(D_METHOD("set_h_scroll", "value"), &CustomTextEdit::set_h_scroll);
-	ClassDB::bind_method(D_METHOD("get_h_scroll"), &CustomTextEdit::get_h_scroll);
+	ClassDB::bind_method(D_METHOD("set_smooth_scroll_enable", "enable"), &TextremeTextEdit::set_smooth_scroll_enabled);
+	ClassDB::bind_method(D_METHOD("is_smooth_scroll_enabled"), &TextremeTextEdit::is_smooth_scroll_enabled);
+	ClassDB::bind_method(D_METHOD("set_v_scroll_speed", "speed"), &TextremeTextEdit::set_v_scroll_speed);
+	ClassDB::bind_method(D_METHOD("get_v_scroll_speed"), &TextremeTextEdit::get_v_scroll_speed);
+	ClassDB::bind_method(D_METHOD("set_v_scroll", "value"), &TextremeTextEdit::set_v_scroll);
+	ClassDB::bind_method(D_METHOD("get_v_scroll"), &TextremeTextEdit::get_v_scroll);
+	ClassDB::bind_method(D_METHOD("set_h_scroll", "value"), &TextremeTextEdit::set_h_scroll);
+	ClassDB::bind_method(D_METHOD("get_h_scroll"), &TextremeTextEdit::get_h_scroll);
 
-	ClassDB::bind_method(D_METHOD("add_keyword_color", "keyword", "color"), &CustomTextEdit::add_keyword_color);
-	ClassDB::bind_method(D_METHOD("has_keyword_color", "keyword"), &CustomTextEdit::has_keyword_color);
-	ClassDB::bind_method(D_METHOD("get_keyword_color", "keyword"), &CustomTextEdit::get_keyword_color);
-	ClassDB::bind_method(D_METHOD("add_color_region", "begin_key", "end_key", "color", "line_only"), &CustomTextEdit::add_color_region, DEFVAL(false));
-	ClassDB::bind_method(D_METHOD("clear_colors"), &CustomTextEdit::clear_colors);
-	ClassDB::bind_method(D_METHOD("menu_option", "option"), &CustomTextEdit::menu_option);
-	ClassDB::bind_method(D_METHOD("get_menu"), &CustomTextEdit::get_menu);
+	ClassDB::bind_method(D_METHOD("add_keyword_color", "keyword", "color"), &TextremeTextEdit::add_keyword_color);
+	ClassDB::bind_method(D_METHOD("has_keyword_color", "keyword"), &TextremeTextEdit::has_keyword_color);
+	ClassDB::bind_method(D_METHOD("get_keyword_color", "keyword"), &TextremeTextEdit::get_keyword_color);
+	ClassDB::bind_method(D_METHOD("add_color_region", "begin_key", "end_key", "color", "line_only"), &TextremeTextEdit::add_color_region, DEFVAL(false));
+	ClassDB::bind_method(D_METHOD("clear_colors"), &TextremeTextEdit::clear_colors);
+	ClassDB::bind_method(D_METHOD("menu_option", "option"), &TextremeTextEdit::menu_option);
+	ClassDB::bind_method(D_METHOD("get_menu"), &TextremeTextEdit::get_menu);
 
-	ClassDB::bind_method(D_METHOD("get_breakpoints"), &CustomTextEdit::get_breakpoints_array);
-	ClassDB::bind_method(D_METHOD("remove_breakpoints"), &CustomTextEdit::remove_breakpoints);
+	ClassDB::bind_method(D_METHOD("get_breakpoints"), &TextremeTextEdit::get_breakpoints_array);
+	ClassDB::bind_method(D_METHOD("remove_breakpoints"), &TextremeTextEdit::remove_breakpoints);
 
-	ClassDB::bind_method(D_METHOD("draw_minimap", "draw"), &CustomTextEdit::set_draw_minimap);
-	ClassDB::bind_method(D_METHOD("is_drawing_minimap"), &CustomTextEdit::is_drawing_minimap);
-	ClassDB::bind_method(D_METHOD("set_minimap_width", "width"), &CustomTextEdit::set_minimap_width);
-	ClassDB::bind_method(D_METHOD("get_minimap_width"), &CustomTextEdit::get_minimap_width);
+	ClassDB::bind_method(D_METHOD("draw_minimap", "draw"), &TextremeTextEdit::set_draw_minimap);
+	ClassDB::bind_method(D_METHOD("is_drawing_minimap"), &TextremeTextEdit::is_drawing_minimap);
+	ClassDB::bind_method(D_METHOD("set_minimap_width", "width"), &TextremeTextEdit::set_minimap_width);
+	ClassDB::bind_method(D_METHOD("get_minimap_width"), &TextremeTextEdit::get_minimap_width);
 
 	ADD_PROPERTY(PropertyInfo(Variant::STRING, "text", PROPERTY_HINT_MULTILINE_TEXT), "set_text", "get_text");
 	ADD_PROPERTY(PropertyInfo(Variant::BOOL, "readonly"), "set_readonly", "is_readonly");
@@ -7199,7 +7199,7 @@ void CustomTextEdit::_bind_methods() {
 	ProjectSettings::get_singleton()->set_custom_property_info("gui/common/text_edit_undo_stack_max_size", PropertyInfo(Variant::INT, "gui/common/text_edit_undo_stack_max_size", PROPERTY_HINT_RANGE, "0,10000,1,or_greater")); // No negative numbers.
 }
 
-CustomTextEdit::CustomTextEdit() {
+TextremeTextEdit::TextremeTextEdit() {
 
 	setting_row = false;
 	draw_tabs = false;
@@ -7337,12 +7337,12 @@ CustomTextEdit::CustomTextEdit() {
 	executing_line = -1;
 }
 
-CustomTextEdit::~CustomTextEdit() {
+TextremeTextEdit::~TextremeTextEdit() {
 }
 
 ///////////////////////////////////////////////////////////////////////////////
 
-Map<int, CustomTextEdit::HighlighterInfo> CustomTextEdit::_get_line_syntax_highlighting(int p_line) {
+Map<int, TextremeTextEdit::HighlighterInfo> TextremeTextEdit::_get_line_syntax_highlighting(int p_line) {
 	if (syntax_highlighting_cache.has(p_line)) {
 		return syntax_highlighting_cache[p_line];
 	}
@@ -7368,7 +7368,7 @@ Map<int, CustomTextEdit::HighlighterInfo> CustomTextEdit::_get_line_syntax_highl
 	int in_region = _is_line_in_region(p_line);
 	int deregion = 0;
 
-	const Map<int, CustomTextEdit::Text::ColorRegionInfo> cri_map = text.get_color_region_info(p_line);
+	const Map<int, TextremeTextEdit::Text::ColorRegionInfo> cri_map = text.get_color_region_info(p_line);
 	const String &str = text[p_line];
 	Color prev_color;
 	for (int j = 0; j < str.length(); j++) {
@@ -7427,7 +7427,7 @@ Map<int, CustomTextEdit::HighlighterInfo> CustomTextEdit::_get_line_syntax_highl
 		}
 
 		if (is_symbol && cri_map.has(j)) {
-			const CustomTextEdit::Text::ColorRegionInfo &cri = cri_map[j];
+			const TextremeTextEdit::Text::ColorRegionInfo &cri = cri_map[j];
 
 			if (in_region == -1) {
 				if (!cri.end) {
@@ -7536,10 +7536,10 @@ Map<int, CustomTextEdit::HighlighterInfo> CustomTextEdit::_get_line_syntax_highl
 	return color_map;
 }
 
-void SyntaxHighlighter::set_text_editor(CustomTextEdit *p_text_editor) {
+void SyntaxHighlighter::set_text_editor(TextremeTextEdit *p_text_editor) {
 	text_editor = p_text_editor;
 }
 
-CustomTextEdit *SyntaxHighlighter::get_text_editor() {
+TextremeTextEdit *SyntaxHighlighter::get_text_editor() {
 	return text_editor;
 }
