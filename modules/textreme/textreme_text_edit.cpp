@@ -4164,7 +4164,7 @@ Array TextremeTextEdit::get_positions(int p_from_line, int p_from_column, int p_
 			}
 		}
 		Vector<Vector2> ans = get_wrap_rows_character_positions(i, start_offset);
-		print_line(vformat("Returned position size %d", ans.size()));
+		// print_line(vformat("Returned position size %d", ans.size()));
 		ERR_FAIL_COND_V_MSG(begin > ans.size() + 1 || end > ans.size() + 1, Array(), "TetremeTextEdit: Failed to get position due to indexing error.")
 		start_offset += times_line_wraps(i) + 1;
 		for (int pos = begin; pos < end; ++pos) {
@@ -6228,9 +6228,23 @@ void TextremeTextEdit::_do_text_op(const TextOperation &p_op, bool p_reverse) {
 		int check_line;
 		int check_column;
 		_base_insert_text(p_op.from_line, p_op.from_column, p_op.text, check_line, check_column);
+
 		ERR_FAIL_COND(check_line != p_op.to_line); // BUG.
 		ERR_FAIL_COND(check_column != p_op.to_column); // BUG.
+
+
+		Array positions = get_positions(p_op.from_line, p_op.from_column, check_line, check_column);
+		String parced_text = _base_get_text(p_op.from_line, p_op.from_column, check_line, check_column);
+
+		emit_signal("on_text_added", parced_text, positions);
+
 	} else {
+
+		Array positions = get_positions(p_op.from_line, p_op.from_column, p_op.to_line, p_op.to_column);
+		String parced_text = _base_get_text(p_op.from_line, p_op.from_column, p_op.to_line, p_op.to_column);
+
+		emit_signal("on_text_removed", parced_text, positions);
+
 
 		_base_remove_text(p_op.from_line, p_op.from_column, p_op.to_line, p_op.to_column);
 	}
