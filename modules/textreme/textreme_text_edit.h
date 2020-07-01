@@ -90,6 +90,7 @@ public:
 			Ref<Texture> info_icon;
 			String info;
 			String data;
+			// Vector<Vector2> character_positions;
 			Line() {
 				width_cache = 0;
 				marked = false;
@@ -119,6 +120,7 @@ public:
 		int get_char_width(CharType c, CharType next_c, int px) const;
 		void set_line_wrap_amount(int p_line, int p_wrap_amount) const;
 		int get_line_wrap_amount(int p_line) const;
+		// void set_character_positions(int p_line, Vector<Vector2> positions) const;
 		const Map<int, ColorRegionInfo> &get_color_region_info(int p_line) const;
 		void set(int p_line, const String &p_text);
 		void set_marked(int p_line, bool p_marked) { text.write[p_line].marked = p_marked; }
@@ -146,6 +148,7 @@ public:
 		void insert(int p_at, const String &p_text);
 		void remove(int p_at);
 		int size() const { return text.size(); }
+		// void clear_character_position_cache();
 		void clear();
 		void clear_width_cache();
 		void clear_wrap_cache();
@@ -451,6 +454,8 @@ private:
 	bool line_wraps(int line) const;
 	int times_line_wraps(int line) const;
 	Vector<String> get_wrap_rows_text(int p_line) const;
+	Vector<Vector2> get_wrap_rows_character_positions(int p_line) const;
+	Array get_line_character_positions(int p_line) const;
 	int get_cursor_wrap_index() const;
 	int get_line_wrap_index_at_col(int p_line, int p_column) const;
 	int get_char_count();

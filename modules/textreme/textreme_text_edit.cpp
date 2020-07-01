@@ -257,6 +257,20 @@ int TextremeTextEdit::Text::get_line_wrap_amount(int p_line) const {
 	return text[p_line].wrap_amount_cache;
 }
 
+// void TextremeTextEdit::Text::set_character_positions(int p_line, Vector<Vector2> positions) const {
+
+// 	ERR_FAIL_INDEX(p_line, text.size());
+
+// 	text.write[p_line].character_positions = positions;	
+// }
+
+// void TextremeTextEdit::Text::clear_character_position_cache() {
+	
+// 	for (int i = 0; i < text.size(); i++) {
+// 		text.write[i].character_positions.clear();
+// 	}	
+// }
+
 void TextremeTextEdit::Text::clear_width_cache() {
 
 	for (int i = 0; i < text.size(); i++) {
@@ -4072,6 +4086,9 @@ void TextremeTextEdit::_insert_text(int p_line, int p_char, const String &p_text
 
 	int retline, retchar;
 	_base_insert_text(p_line, p_char, p_text, retline, retchar);
+
+	emit_signal("on_text_added", p_text);
+
 	if (r_end_line)
 		*r_end_line = retline;
 	if (r_end_char)
@@ -4124,6 +4141,7 @@ void TextremeTextEdit::_remove_text(int p_from_line, int p_from_column, int p_to
 	if (undo_enabled) {
 		_clear_redo();
 		text = _base_get_text(p_from_line, p_from_column, p_to_line, p_to_column);
+		emit_signal("on_text_removed", text);
 	}
 
 	_base_remove_text(p_from_line, p_from_column, p_to_line, p_to_column);
@@ -4268,9 +4286,13 @@ void TextremeTextEdit::_update_wrap_at() {
 	wrap_at = get_size().width - cache.style_normal->get_minimum_size().width - cache.line_number_w - cache.breakpoint_gutter_width - cache.fold_gutter_width - cache.info_gutter_width - cache.minimap_width - wrap_right_offset;
 	update_cursor_wrap_offset();
 	text.clear_wrap_cache();
+	// text.clear_character_position_cache();
 
 	for (int i = 0; i < text.size(); i++) {
 		// Update all values that wrap.
+		// Vector<Vector2> positions = get_wrap_rows_character_positions(i);
+		// text.set_character_positions(i, positions);
+
 		if (!line_wraps(i))
 			continue;
 		Vector<String> rows = get_wrap_rows_text(i);
@@ -4387,6 +4409,124 @@ int TextremeTextEdit::times_line_wraps(int line) const {
 	}
 
 	return wrap_amount;
+}
+
+Vector<Vector2> TextremeTextEdit::get_wrap_rows_character_positions(int p_line) const {
+
+	ERR_FAIL_INDEX_V(p_line, text.size(), Vector<Vector2>());
+
+	Vector<Vector2> positions;
+	// Vector<String> lines;
+	// if (!line_wraps(p_line)) {
+	// 	lines.push_back(text[p_line]);
+	// 	return lines;
+	// }
+
+	int px = 0;
+	int col = 0;
+	String line_text = text[p_line];
+	// String wrap_substring = "";
+
+	int word_px = 0;
+	// String word_str = "";
+	Vector<Vector2> wrap_word_pos;
+	int cur_wrap_index = 0;
+
+	int tab_offset_px = get_indent_level(p_line) * cache.font->get_char_size(' ').width;
+	if (tab_offset_px >= wrap_at) {
+		tab_offset_px = 0;
+	}
+
+	int indent_ofs = 0;
+
+	auto commit_word_positions = [&](int offset_x, int offset_y) {
+		for(int word_idx = 0; word_idx < wrap_word_pos.size(); ++word_idx) {
+			Vector2 pos = wrap_word_pos[word_idx];
+			pos.x += offset_x;
+			pos.y = cur_wrap_index + offset_y;
+			positions.push_back(pos);
+		}
+
+		wrap_word_pos.clear();
+	};
+
+	while (col < line_text.length()) {
+		CharType c = line_text[col];
+		int w = text.get_char_width(c, line_text[col + 1], px + word_px);
+
+		indent_ofs = (cur_wrap_index != 0 ? tab_offset_px : 0);
+
+		if (indent_ofs + word_px + w > wrap_at) {
+			// Not enough space to add this char; start next line.
+			
+			commit_word_positions(indent_ofs, 1);
+
+			// for(int word_idx = 0; word_idx < wrap_word_pos.size(); ++word_idx) {
+			// 	Vector2 pos = wrap_word_pos[word_idx];
+			// 	pos.x += indent_ofs;
+			// 	pos.y = cur_wrap_index;
+			// 	positions.push_back(pos);
+			// }
+			// wrap_word_pos.clear();
+
+			// wrap_substring += word_str;
+			// lines.push_back(wrap_substring);
+			cur_wrap_index++;
+			wrap_word_pos.push_back(Vector2(w, 0));
+			// wrap_substring = "";
+			px = 0;
+
+			// word_str = "";
+			// word_str += c;
+			word_px = w;
+		} else {
+			word_px += w;
+			wrap_word_pos.push_back(Vector2(word_px, 0));
+			// word_str += c;
+			if (c == ' ') {
+				// End of a word; add this word to the substring.
+				commit_word_positions(indent_ofs + px, 1);
+				// for(int word_idx = 0; word_idx < wrap_word_pos.size(); ++word_idx) {
+				// 	Vector2 pos = wrap_word_pos[word_idx];
+				// 	pos.x += indent_ofs + px;
+				// 	pos.y = cur_wrap_index;
+				// 	positions.push_back(pos);
+				// }
+				// wrap_word_pos.clear();
+				// wrap_substring += word_str;
+				px += word_px;
+				// word_str = "";
+				word_px = 0;
+			}
+
+			if (indent_ofs + px + word_px > wrap_at) {
+				// This word will be moved to the next line.
+				// lines.push_back(wrap_substring);
+				// Reset for next wrap.
+				cur_wrap_index++;
+				// wrap_substring = "";
+				px = 0;
+			}
+		}
+		col++;
+	}
+	// Line ends before hit wrap_at; add this word to the substring.
+	// wrap_substring += word_str;
+	// lines.push_back(wrap_substring);
+
+	commit_word_positions(indent_ofs + px, 1);
+
+	// for(int word_idx = 0; word_idx < wrap_word_pos.size(); ++word_idx) {
+	// 	Vector2 pos = wrap_word_pos[word_idx];
+	// 	pos.x += indent_ofs + px;
+	// 	pos.y = cur_wrap_index;
+	// 	positions.push_back(pos);
+	// }
+
+	// Update cache.
+	// text.set_character_positions(p_line, positions);
+
+	return positions;
 }
 
 Vector<String> TextremeTextEdit::get_wrap_rows_text(int p_line) const {
@@ -7005,6 +7145,19 @@ PopupMenu *TextremeTextEdit::get_menu() const {
 	return menu;
 }
 
+
+Array TextremeTextEdit::get_line_character_positions(int p_line) const {
+	Vector<Vector2> v = get_wrap_rows_character_positions(p_line);
+	Array result;
+	for (int i = 0; i < v.size(); ++i) {
+		result.push_back(v[i]);
+	}
+	return result;
+}
+// Poolvector<Vector2> get_line_positions(int p_line) {
+
+// }
+
 void TextremeTextEdit::_bind_methods() {
 
 	ClassDB::bind_method(D_METHOD("_gui_input"), &TextremeTextEdit::_gui_input);
@@ -7183,6 +7336,12 @@ void TextremeTextEdit::_bind_methods() {
 	ADD_SIGNAL(MethodInfo("breakpoint_toggled", PropertyInfo(Variant::INT, "row")));
 	ADD_SIGNAL(MethodInfo("symbol_lookup", PropertyInfo(Variant::STRING, "symbol"), PropertyInfo(Variant::INT, "row"), PropertyInfo(Variant::INT, "column")));
 	ADD_SIGNAL(MethodInfo("info_clicked", PropertyInfo(Variant::INT, "row"), PropertyInfo(Variant::STRING, "info")));
+
+	ADD_SIGNAL(MethodInfo("on_text_removed", PropertyInfo(Variant::STRING, "removed_text")));
+	ADD_SIGNAL(MethodInfo("on_text_added", PropertyInfo(Variant::STRING, "added_text")));
+	ClassDB::bind_method(D_METHOD("get_line_character_positions", "line_idx"), &TextremeTextEdit::get_line_character_positions);
+	ClassDB::bind_method(D_METHOD("get_row_height"), &TextremeTextEdit::get_row_height);
+
 
 	BIND_ENUM_CONSTANT(MENU_CUT);
 	BIND_ENUM_CONSTANT(MENU_COPY);
