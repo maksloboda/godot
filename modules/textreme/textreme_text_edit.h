@@ -454,7 +454,7 @@ private:
 	bool line_wraps(int line) const;
 	int times_line_wraps(int line) const;
 	Vector<String> get_wrap_rows_text(int p_line) const;
-	Vector<Vector2> get_wrap_rows_character_positions(int p_line) const;
+	Vector<Vector2> get_wrap_rows_character_positions(int p_line, int pre_y_offset) const;
 	Array get_line_character_positions(int p_line) const;
 	int get_cursor_wrap_index() const;
 	int get_line_wrap_index_at_col(int p_line, int p_column) const;
@@ -539,6 +539,7 @@ protected:
 
 	void _insert_text(int p_line, int p_char, const String &p_text, int *r_end_line = NULL, int *r_end_char = NULL);
 	void _remove_text(int p_from_line, int p_from_column, int p_to_line, int p_to_column);
+	Array get_positions(int p_from_line, int p_from_column, int p_to_line, int p_to_column) const;
 	void _insert_text_at_cursor(const String &p_text);
 	void _gui_input(const Ref<InputEvent> &p_gui_input);
 	void _notification(int p_what);

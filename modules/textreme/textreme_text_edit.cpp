@@ -4087,7 +4087,10 @@ void TextremeTextEdit::_insert_text(int p_line, int p_char, const String &p_text
 	int retline, retchar;
 	_base_insert_text(p_line, p_char, p_text, retline, retchar);
 
-	emit_signal("on_text_added", p_text);
+	Array positions = get_positions(p_line, p_char, retline, retchar);
+	String parced_text = _base_get_text(p_line, p_char, retline, retchar);
+
+	emit_signal("on_text_added", parced_text, positions);
 
 	if (r_end_line)
 		*r_end_line = retline;
@@ -4132,16 +4135,56 @@ void TextremeTextEdit::_insert_text(int p_line, int p_char, const String &p_text
 	current_op.version = op.version;
 }
 
+Array TextremeTextEdit::get_positions(int p_from_line, int p_from_column, int p_to_line, int p_to_column) const {
+
+	ERR_FAIL_INDEX_V(p_from_line, text.size(), Array());
+	ERR_FAIL_INDEX_V(p_from_column, text[p_from_line].length() + 1, Array());
+	ERR_FAIL_INDEX_V(p_to_line, text.size(), Array());
+	ERR_FAIL_INDEX_V(p_to_column, text[p_to_line].length() + 1, Array());
+	ERR_FAIL_COND_V(p_to_line < p_from_line, Array()); // 'from > to'.
+	ERR_FAIL_COND_V(p_to_line == p_from_line && p_to_column < p_from_column, Array()); // 'from > to'.
+
+	Array ret;
+
+	int start_offset = 1;
+	for (int i = 0; i < p_from_line; ++i) {
+		start_offset += times_line_wraps(i) + 1;
+	}
+
+	for (int i = p_from_line; i <= p_to_line; i++) {
+
+		int begin = (i == p_from_line) ? p_from_column : 0;
+		int end = (i == p_to_line) ? p_to_column : text[i].length();
+		
+		if (i > p_from_line) {
+			if (ret.empty()) {
+				ret.push_back(Vector2(0, start_offset));	
+			} else {
+				ret.push_back(ret.back());
+			}
+		}
+		Vector<Vector2> ans = get_wrap_rows_character_positions(i, start_offset);
+		print_line(vformat("Returned position size %d", ans.size()));
+		ERR_FAIL_COND_V_MSG(begin > ans.size() + 1 || end > ans.size() + 1, Array(), "TetremeTextEdit: Failed to get position due to indexing error.")
+		start_offset += times_line_wraps(i) + 1;
+		for (int pos = begin; pos < end; ++pos) {
+			ret.push_back(ans[pos]);
+		}
+	}
+
+	return ret;
+}
+
 void TextremeTextEdit::_remove_text(int p_from_line, int p_from_column, int p_to_line, int p_to_column) {
 
 	if (!setting_text && idle_detect->is_inside_tree())
 		idle_detect->start();
 
-	String text;
+	String text = _base_get_text(p_from_line, p_from_column, p_to_line, p_to_column);
+	Array text_positions = get_positions(p_from_line, p_from_column, p_to_line, p_to_column);
+	emit_signal("on_text_removed", text, text_positions);
 	if (undo_enabled) {
 		_clear_redo();
-		text = _base_get_text(p_from_line, p_from_column, p_to_line, p_to_column);
-		emit_signal("on_text_removed", text);
 	}
 
 	_base_remove_text(p_from_line, p_from_column, p_to_line, p_to_column);
@@ -4412,17 +4455,22 @@ int TextremeTextEdit::times_line_wraps(int line) const {
 }
 
 
-Vector<Vector2> TextremeTextEdit::get_wrap_rows_character_positions(int p_line) const {
+Vector<Vector2> TextremeTextEdit::get_wrap_rows_character_positions(int p_line, int pre_y_offset) const {
 
 	ERR_FAIL_INDEX_V(p_line, text.size(), Vector<Vector2>());
 	ERR_FAIL_COND_V_MSG(!wrap_enabled, Vector<Vector2>(), "Currently wrap_enabled = false isn't supported.");
 
+
+
 	int y_off = 1;
 
-	for (int i = 0; i < p_line; ++i) {
-		int value = times_line_wraps(i);
-//		print_line(vformat("%d", value));
-		y_off += value + 1;
+	if (pre_y_offset < 0) {
+		for (int i = 0; i < p_line; ++i) {
+			int value = times_line_wraps(i);
+			y_off += value + 1;
+		}
+	} else {
+		y_off = pre_y_offset;		
 	}
 
 	Vector<Vector2> positions;
@@ -4490,7 +4538,7 @@ Vector<Vector2> TextremeTextEdit::get_wrap_rows_character_positions(int p_line) 
 		col++;
 	}
 	// Line ends before hit wrap_at; add this word to the substring.
-
+	indent_ofs = (cur_wrap_index != 0 ? tab_offset_px : 0);
 	commit_word_positions(indent_ofs + px, y_off);
 
 	// Update cache.
@@ -7117,7 +7165,7 @@ PopupMenu *TextremeTextEdit::get_menu() const {
 
 
 Array TextremeTextEdit::get_line_character_positions(int p_line) const {
-	Vector<Vector2> v = get_wrap_rows_character_positions(p_line);
+	Vector<Vector2> v = get_wrap_rows_character_positions(p_line, -1);
 	Array result;
 	for (int i = 0; i < v.size(); ++i) {
 		result.push_back(v[i]);
@@ -7272,6 +7320,8 @@ void TextremeTextEdit::_bind_methods() {
 	// Custom methods
 	ClassDB::bind_method(D_METHOD("get_line_character_positions", "line_idx"), &TextremeTextEdit::get_line_character_positions);
 	ClassDB::bind_method(D_METHOD("get_row_height"), &TextremeTextEdit::get_row_height);
+	ClassDB::bind_method(D_METHOD("get_text_piece", "from_line", "from_column", "to_line", "to_column"), &TextremeTextEdit::_base_get_text);
+	ClassDB::bind_method(D_METHOD("get_text_positions_piece", "from_line", "from_column", "to_line", "to_column"), &TextremeTextEdit::get_positions);
 
 	ADD_PROPERTY(PropertyInfo(Variant::STRING, "text", PROPERTY_HINT_MULTILINE_TEXT), "set_text", "get_text");
 	ADD_PROPERTY(PropertyInfo(Variant::BOOL, "readonly"), "set_readonly", "is_readonly");
@@ -7312,8 +7362,8 @@ void TextremeTextEdit::_bind_methods() {
 	ADD_SIGNAL(MethodInfo("info_clicked", PropertyInfo(Variant::INT, "row"), PropertyInfo(Variant::STRING, "info")));
 
 	// Custom Signals
-	ADD_SIGNAL(MethodInfo("on_text_removed", PropertyInfo(Variant::STRING, "removed_text")));
-	ADD_SIGNAL(MethodInfo("on_text_added", PropertyInfo(Variant::STRING, "added_text")));
+	ADD_SIGNAL(MethodInfo("on_text_removed", PropertyInfo(Variant::STRING, "removed_text"), PropertyInfo(Variant::ARRAY, "text_positions")));
+	ADD_SIGNAL(MethodInfo("on_text_added", PropertyInfo(Variant::STRING, "added_text"), PropertyInfo(Variant::ARRAY, "text_positions")));
 
 	BIND_ENUM_CONSTANT(MENU_CUT);
 	BIND_ENUM_CONSTANT(MENU_COPY);
