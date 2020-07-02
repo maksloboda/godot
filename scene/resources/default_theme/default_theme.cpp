@@ -504,11 +504,15 @@ void fill_default_theme(Ref<Theme> &theme, const Ref<Font> &default_font, const 
 	theme->set_color("member_variable_color", "TextremeTextEdit", Color(0.9, 0.31, 0.35));
 	theme->set_color("number_color", "TextremeTextEdit", Color(0.92, 0.58, 0.2));
 	theme->set_color("word_highlighted_color", "TextremeTextEdit", Color(0.8, 0.9, 0.9, 0.15));
+	theme->set_color("drop_shadow_color", "TextremeTextEdit", Color(0.0, 0.0, 0.0, 1.0));
 
 	theme->set_constant("completion_lines", "TextremeTextEdit", 7);
 	theme->set_constant("completion_max_width", "TextremeTextEdit", 50);
 	theme->set_constant("completion_scroll_width", "TextremeTextEdit", 3);
 	theme->set_constant("line_spacing", "TextremeTextEdit", 4 * scale);
+
+	theme->set_constant("drop_shadow_y_offset", "TextremeTextEdit", 0);
+	theme->set_constant("drop_shadow_x_offset", "TextremeTextEdit", 0);
 
 	Ref<Texture> empty_icon = memnew(ImageTexture);
 

@@ -1497,6 +1497,9 @@ void TextremeTextEdit::_notification(int p_what) {
 
 						if (str[j] >= 32) {
 							int yofs = ofs_y + (get_row_height() - cache.font->get_height()) / 2;
+							int x_shadow_offset = get_constant("drop_shadow_x_offset");
+							int y_shadow_offset = get_constant("drop_shadow_y_offset");
+							drawer.draw_char(ci, Point2i(char_ofs + char_margin + ofs_x + x_shadow_offset, yofs + ascent + y_shadow_offset), str[j], str[j + 1], cache.drop_shadow_color);
 							int w = drawer.draw_char(ci, Point2i(char_ofs + char_margin + ofs_x, yofs + ascent), str[j], str[j + 1], in_selection && override_selected_font_color ? cache.font_color_selected : color);
 							if (underlined) {
 								float line_width = 1.0;
@@ -5218,11 +5221,13 @@ void TextremeTextEdit::_update_caches() {
 	cache.search_result_border_color = get_color("search_result_border_color");
 	cache.symbol_color = get_color("symbol_color");
 	cache.background_color = get_color("background_color");
+	cache.drop_shadow_color = get_color("drop_shadow_color");
 #ifdef TOOLS_ENABLED
 	cache.line_spacing = get_constant("line_spacing") * EDSCALE;
 #else
 	cache.line_spacing = get_constant("line_spacing");
 #endif
+
 	cache.row_height = cache.font->get_height() + cache.line_spacing;
 	cache.tab_icon = get_icon("tab");
 	cache.space_icon = get_icon("space");

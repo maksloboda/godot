@@ -252,6 +252,7 @@ private:
 		Color search_result_border_color;
 		Color symbol_color;
 		Color background_color;
+		Color drop_shadow_color;
 
 		int row_height;
 		int line_spacing;
