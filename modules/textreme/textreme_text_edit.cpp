@@ -4151,6 +4151,8 @@ Array TextremeTextEdit::get_positions(int p_from_line, int p_from_column, int p_
 		start_offset += times_line_wraps(i) + 1;
 	}
 
+	int line_height = get_row_height();
+
 	for (int i = p_from_line; i <= p_to_line; i++) {
 
 		int begin = (i == p_from_line) ? p_from_column : 0;
@@ -4158,7 +4160,7 @@ Array TextremeTextEdit::get_positions(int p_from_line, int p_from_column, int p_
 		
 		if (i > p_from_line) {
 			if (ret.empty()) {
-				ret.push_back(Vector2(0, start_offset));	
+				ret.push_back(Vector2(0, start_offset * line_height));	
 			} else {
 				ret.push_back(ret.back());
 			}
@@ -4168,7 +4170,7 @@ Array TextremeTextEdit::get_positions(int p_from_line, int p_from_column, int p_
 		ERR_FAIL_COND_V_MSG(begin > ans.size() + 1 || end > ans.size() + 1, Array(), "TetremeTextEdit: Failed to get position due to indexing error.")
 		start_offset += times_line_wraps(i) + 1;
 		for (int pos = begin; pos < end; ++pos) {
-			ret.push_back(ans[pos]);
+			ret.push_back(ans[pos] * Vector2(1, line_height));
 		}
 	}
 
