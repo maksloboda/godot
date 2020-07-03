@@ -412,6 +412,8 @@ private:
 	float target_v_scroll;
 	float v_scroll_speed;
 
+	bool is_v_scroll_enabled = true;
+
 	String highlighted_word;
 
 	uint64_t last_dblclk;
@@ -749,8 +751,12 @@ public:
 	Color get_member_color(String p_member) const;
 	void clear_member_keywords();
 
+	void set_v_scroll_enabled(bool is_enabled);
+	double get_v_scroll_px() const;
+	double get_v_scroll_max_px() const;
 	double get_v_scroll() const;
 	void set_v_scroll(double p_scroll);
+	void set_v_scroll_px(double p_scroll_px);
 
 	int get_h_scroll() const;
 	void set_h_scroll(int p_scroll);

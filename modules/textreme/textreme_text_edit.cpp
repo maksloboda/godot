@@ -417,8 +417,8 @@ void TextremeTextEdit::_update_scrollbars() {
 	updating_scrolls = true;
 
 	if (use_vscroll) {
-
 		v_scroll->show();
+		emit_signal("on_v_scroll_visibility_changed", true);
 		v_scroll->set_max(total_rows + get_visible_rows_offset());
 		v_scroll->set_page(visible_rows + get_visible_rows_offset());
 		if (smooth_scroll_enabled) {
@@ -427,13 +427,14 @@ void TextremeTextEdit::_update_scrollbars() {
 			v_scroll->set_step(1);
 		}
 		set_v_scroll(get_v_scroll());
-
+		emit_signal("on_v_scroll_changed", get_v_scroll_px());
+		emit_signal("on_v_scroll_visibility_changed", true);
 	} else {
-
 		cursor.line_ofs = 0;
 		cursor.wrap_ofs = 0;
 		v_scroll->set_value(0);
 		v_scroll->hide();
+		emit_signal("on_v_scroll_visibility_changed", false);
 	}
 
 	if (use_hscroll && !is_wrap_enabled()) {
@@ -680,6 +681,7 @@ void TextremeTextEdit::_notification(int p_what) {
 				} else {
 					set_v_scroll(get_v_scroll() + vel);
 				}
+				emit_signal("on_v_scroll_changed", get_v_scroll_px());
 			} else {
 				scrolling = false;
 				minimap_clicked = false;
@@ -3840,6 +3842,7 @@ void TextremeTextEdit::_scroll_up(real_t p_delta) {
 		}
 	} else {
 		set_v_scroll(target_v_scroll);
+		emit_signal("on_v_scroll_changed", get_v_scroll_px());
 	}
 }
 
@@ -3869,6 +3872,7 @@ void TextremeTextEdit::_scroll_down(real_t p_delta) {
 		}
 	} else {
 		set_v_scroll(target_v_scroll);
+		emit_signal("on_v_scroll_changed", get_v_scroll_px());
 	}
 }
 
@@ -3901,6 +3905,7 @@ void TextremeTextEdit::_scroll_lines_up() {
 
 	// Adjust the vertical scroll.
 	set_v_scroll(get_v_scroll() - 1);
+	emit_signal("on_v_scroll_changed", get_v_scroll_px());
 
 	// Adjust the cursor to viewport.
 	if (!selection.active) {
@@ -3921,6 +3926,7 @@ void TextremeTextEdit::_scroll_lines_down() {
 
 	// Adjust the vertical scroll.
 	set_v_scroll(get_v_scroll() + 1);
+	emit_signal("on_v_scroll_changed", get_v_scroll_px());
 
 	// Adjust the cursor to viewport.
 	if (!selection.active) {
@@ -6502,6 +6508,7 @@ double TextremeTextEdit::get_scroll_pos_for_line(int p_line, int p_wrap_index) c
 void TextremeTextEdit::set_line_as_first_visible(int p_line, int p_wrap_index) {
 
 	set_v_scroll(get_scroll_pos_for_line(p_line, p_wrap_index));
+	emit_signal("on_v_scroll_changed", get_v_scroll_px());
 }
 
 void TextremeTextEdit::set_line_as_center_visible(int p_line, int p_wrap_index) {
@@ -6511,6 +6518,7 @@ void TextremeTextEdit::set_line_as_center_visible(int p_line, int p_wrap_index) 
 	int first_line = p_line - num_lines_from_rows(p_line, p_wrap_index, -visible_rows / 2, wi) + 1;
 
 	set_v_scroll(get_scroll_pos_for_line(first_line, wi));
+	emit_signal("on_v_scroll_changed", get_v_scroll_px());
 }
 
 void TextremeTextEdit::set_line_as_last_visible(int p_line, int p_wrap_index) {
@@ -6519,6 +6527,7 @@ void TextremeTextEdit::set_line_as_last_visible(int p_line, int p_wrap_index) {
 	int first_line = p_line - num_lines_from_rows(p_line, p_wrap_index, -get_visible_rows() - 1, wi) + 1;
 
 	set_v_scroll(get_scroll_pos_for_line(first_line, wi) + get_visible_rows_offset());
+	emit_signal("on_v_scroll_changed", get_v_scroll_px());
 }
 
 int TextremeTextEdit::get_first_visible_line() const {
@@ -6553,10 +6562,31 @@ double TextremeTextEdit::get_visible_rows_offset() const {
 	return total;
 }
 
+void TextremeTextEdit::set_v_scroll_enabled(bool is_enabled) {
+	// v_scroll->set_visible(is_enabled);
+	if (is_enabled) {
+		v_scroll->set_self_modulate(Color(1.0, 1.0, 1.0, 0.0));
+		v_scroll->set_mouse_filter(Control::MOUSE_FILTER_IGNORE);
+	}
+	else {
+		v_scroll->set_self_modulate(Color(1.0, 1.0, 1.0, 1.0));
+		v_scroll->set_mouse_filter(Control::MOUSE_FILTER_STOP);
+	}
+	is_v_scroll_enabled = false;
+}
+
 double TextremeTextEdit::get_v_scroll_offset() const {
 
 	double val = get_v_scroll() - floor(get_v_scroll());
 	return CLAMP(val, 0, 1);
+}
+
+double TextremeTextEdit::get_v_scroll_px() const {
+	return get_v_scroll() * get_row_height();
+}
+
+double TextremeTextEdit::get_v_scroll_max_px() const {
+	return (v_scroll->get_max() - v_scroll->get_page()) * get_row_height();
 }
 
 double TextremeTextEdit::get_v_scroll() const {
@@ -6570,6 +6600,10 @@ void TextremeTextEdit::set_v_scroll(double p_scroll) {
 	int max_v_scroll = v_scroll->get_max() - v_scroll->get_page();
 	if (p_scroll >= max_v_scroll - 1.0)
 		_scroll_moved(v_scroll->get_value());
+}
+
+void TextremeTextEdit::set_v_scroll_px(double p_scroll_px) {
+	set_v_scroll(p_scroll_px / get_row_height());	
 }
 
 int TextremeTextEdit::get_h_scroll() const {
@@ -7344,6 +7378,10 @@ void TextremeTextEdit::_bind_methods() {
 	ClassDB::bind_method(D_METHOD("get_row_height"), &TextremeTextEdit::get_row_height);
 	ClassDB::bind_method(D_METHOD("get_text_piece", "from_line", "from_column", "to_line", "to_column"), &TextremeTextEdit::_base_get_text);
 	ClassDB::bind_method(D_METHOD("get_text_positions_piece", "from_line", "from_column", "to_line", "to_column"), &TextremeTextEdit::get_positions);
+	ClassDB::bind_method(D_METHOD("get_v_scroll_px"), &TextremeTextEdit::get_v_scroll_px);
+	ClassDB::bind_method(D_METHOD("set_v_scroll_px", "new_value_px"), &TextremeTextEdit::set_v_scroll_px);
+	ClassDB::bind_method(D_METHOD("get_v_scroll_max_px"), &TextremeTextEdit::get_v_scroll_max_px);
+	ClassDB::bind_method(D_METHOD("set_v_scroll_enabled", "is_enabled"), &TextremeTextEdit::set_v_scroll_enabled);
 
 	ADD_PROPERTY(PropertyInfo(Variant::STRING, "text", PROPERTY_HINT_MULTILINE_TEXT), "set_text", "get_text");
 	ADD_PROPERTY(PropertyInfo(Variant::BOOL, "readonly"), "set_readonly", "is_readonly");
@@ -7386,6 +7424,8 @@ void TextremeTextEdit::_bind_methods() {
 	// Custom Signals
 	ADD_SIGNAL(MethodInfo("on_text_removed", PropertyInfo(Variant::STRING, "removed_text"), PropertyInfo(Variant::ARRAY, "text_positions")));
 	ADD_SIGNAL(MethodInfo("on_text_added", PropertyInfo(Variant::STRING, "added_text"), PropertyInfo(Variant::ARRAY, "text_positions")));
+	ADD_SIGNAL(MethodInfo("on_v_scroll_changed", PropertyInfo(Variant::REAL, "new_value_px")));
+	ADD_SIGNAL(MethodInfo("on_v_scroll_visibility_changed", PropertyInfo(Variant::BOOL, "is_visible")));
 
 	BIND_ENUM_CONSTANT(MENU_CUT);
 	BIND_ENUM_CONSTANT(MENU_COPY);
