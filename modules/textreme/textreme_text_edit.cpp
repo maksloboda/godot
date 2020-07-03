@@ -356,7 +356,7 @@ int TextremeTextEdit::Text::get_char_width(CharType c, CharType next_c, int px) 
 }
 
 void TextremeTextEdit::_update_scrollbars() {
-
+	// print_line("Updated the scrollbars.");
 	Size2 size = get_size();
 	Size2 hmin = h_scroll->get_combined_minimum_size();
 	Size2 vmin = v_scroll->get_combined_minimum_size();
@@ -4365,7 +4365,7 @@ void TextremeTextEdit::adjust_viewport_to_cursor() {
 	if (cur_line < first_vis_line || (cur_line == first_vis_line && cur_wrap < first_vis_wrap)) {
 		// Cursor is above screen.
 		set_line_as_first_visible(cur_line, cur_wrap);
-	} else if (cur_line > last_vis_line || (cur_line == last_vis_line && cur_wrap > last_vis_wrap)) {
+	} else if (cur_line > last_vis_line || (cur_line == last_vis_line && cur_wrap >= last_vis_wrap)) {
 		// Cursor is below screen.
 		set_line_as_last_visible(cur_line, cur_wrap);
 	}
@@ -5796,6 +5796,7 @@ bool TextremeTextEdit::search(const String &p_key, uint32_t p_search_flags, int 
 
 void TextremeTextEdit::_cursor_changed_emit() {
 
+	// print_line(vformat("Last visible line: %d\n Current line: %d \nLast visible wrap: %d", get_last_visible_line(), cursor_get_line(), get_last_visible_line_wrap_index()));
 	emit_signal("cursor_changed");
 	cursor_changed_dirty = false;
 }
