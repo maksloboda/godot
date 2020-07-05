@@ -469,6 +469,14 @@ Array TextremeTextEdit::get_ranges() {
 	Array temp_answer;
 	Array actual_answer;
 
+	auto get_string_dict = [](const String &string, int start, int length, Vector2 position, const String &type) {
+		Dictionary data;
+		data["string"] = string.substr(start, length);
+		data["position"] = position;
+		data["type"] = type;
+		return data;
+	};
+
 	auto process_symbol = [&](const String &line, int current_index, const String &symbol, Vector2 position, Vector2 prev_position) {
 
 		// At the start of current iteration
@@ -486,10 +494,7 @@ Array TextremeTextEdit::get_ranges() {
 				// Close current range
 
 				// Flush string to temp answer
-				Dictionary data;
-				data["string"] = line.substr(start_idx, current_length);
-				data["position"] = start_position;
-				data["type"] = last_symbol;
+				auto data = get_string_dict(line, start_idx, current_length, start_position, last_symbol);
 
 				temp_answer.push_back(data);
 
@@ -518,13 +523,11 @@ Array TextremeTextEdit::get_ranges() {
 		}
 
 		bool is_on_the_last_symbol = current_index == (int)line.length() - 1;
+		// bool is_wraped
 
 		if (is_open && (is_on_the_last_symbol)) { // || position.y != prev_position.y
 			// Flush current range on the last of the line
-			Dictionary data;
-			data["string"] = line.substr(start_idx, current_length);
-			data["position"] = start_position;
-			data["type"] = last_symbol;
+			auto data = get_string_dict(line, start_idx, current_length, start_position, last_symbol);
 
 			temp_answer.push_back(data);
 
