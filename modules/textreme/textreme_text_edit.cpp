@@ -469,10 +469,16 @@ Array TextremeTextEdit::get_ranges() {
 	Array temp_answer;
 	Array actual_answer;
 
-	auto get_string_dict = [](const String &string, int start, int length, Vector2 position, const String &type) {
+	auto get_string_dict = [this](const String &string, int start, int length, Vector2 position, const String &type) {
 		Dictionary data;
-		data["string"] = string.substr(start, length);
-		data["position"] = position;
+		String txt = string.substr(start, length);
+		data["string"] = txt;
+
+		Vector2 actual_position = position;
+		actual_position.y = (actual_position.y - 1) * get_row_height();
+		actual_position.x -= cache.font->get_char_size(txt[0]).x;
+
+		data["position"] = actual_position;
 		data["type"] = type;
 		return data;
 	};
@@ -492,6 +498,7 @@ Array TextremeTextEdit::get_ranges() {
 
 			start_idx = current_index;
 			current_length = 1;
+			start_position = position;
 		}
 
 		//Check if current symbol is a range identifier
@@ -502,6 +509,7 @@ Array TextremeTextEdit::get_ranges() {
 				last_symbol = symbol;
 				start_idx = current_index;
 				current_length = 1;
+				start_position = position;
 			} else if (last_symbol == symbol) {
 				// Close current range
 
@@ -520,6 +528,7 @@ Array TextremeTextEdit::get_ranges() {
 				start_idx = current_index;
 				current_length = 0;
 				is_open = false;
+				start_position = Vector2();
 			} else {
 				// Destroy current range and begin a different one
 
