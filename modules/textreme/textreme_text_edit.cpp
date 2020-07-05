@@ -460,17 +460,19 @@ void TextremeTextEdit::_update_scrollbars() {
 
 // Returns Array of Dictionaries
 Array TextremeTextEdit::get_ranges() {
-	// if is_open then substr(start_idx, current_length) is a potential non zero prefix of a range
 	String last_symbol = " ";
 	bool is_open = false;
 	int start_idx = 0;
-	int current_length = 1;
+	int current_length = 0;
 	Vector2 start_position;
 
 	Array temp_answer;
 	Array actual_answer;
 
 	auto process_symbol = [&](const String &line, int current_index, const String &symbol, Vector2 position, Vector2 prev_position) {
+
+		// At the start of current iteration
+		// if is_open then line.substr(start_idx, current_length) is a string in [start_idx:current_index]
 
 		//Check if current symbol is a range identifier
 		if (range_trigger_symbols.find(symbol) != -1) {
@@ -499,7 +501,7 @@ Array TextremeTextEdit::get_ranges() {
 				temp_answer.clear();
 
 				start_idx = current_index;
-				current_length = 1;
+				current_length = 0;
 				is_open = false;
 			} else {
 				// Destroy current range and begin a different one
@@ -515,14 +517,22 @@ Array TextremeTextEdit::get_ranges() {
 			}
 		}
 
-		if (is_open && current_index == (int)line.length() - 1) {
+		bool is_on_the_last_symbol = current_index == (int)line.length() - 1;
+
+		if (is_open && (is_on_the_last_symbol)) { // || position.y != prev_position.y
 			// Flush current range on the last of the line
 			Dictionary data;
 			data["string"] = line.substr(start_idx, current_length);
 			data["position"] = start_position;
 			data["type"] = last_symbol;
 
-			temp_answer.push_back(data);			
+			temp_answer.push_back(data);
+
+			if (is_on_the_last_symbol) {
+				current_length = 0;
+				start_idx = 0;
+				start_position = position;	
+			}
 		}
 
 		++current_length;
@@ -551,7 +561,7 @@ Array TextremeTextEdit::get_ranges() {
 
 		for(int chr_idx = 0; chr_idx < current_line.length(); ++chr_idx) {
 			String current_char = current_line.substr(chr_idx, 1);
-			
+
 			process_symbol(current_line, chr_idx, current_char, current_line_positions[chr_idx], prev_position);
 			prev_position = current_line_positions[chr_idx];
 		}
