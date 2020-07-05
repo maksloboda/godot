@@ -6703,12 +6703,12 @@ double TextremeTextEdit::get_visible_rows_offset() const {
 void TextremeTextEdit::set_v_scroll_enabled(bool is_enabled) {
 	// v_scroll->set_visible(is_enabled);
 	if (is_enabled) {
-		v_scroll->set_self_modulate(Color(1.0, 1.0, 1.0, 0.0));
-		v_scroll->set_mouse_filter(Control::MOUSE_FILTER_IGNORE);
-	}
-	else {
 		v_scroll->set_self_modulate(Color(1.0, 1.0, 1.0, 1.0));
 		v_scroll->set_mouse_filter(Control::MOUSE_FILTER_STOP);
+	}
+	else {
+		v_scroll->set_self_modulate(Color(1.0, 1.0, 1.0, 0.0));
+		v_scroll->set_mouse_filter(Control::MOUSE_FILTER_IGNORE);
 	}
 	is_v_scroll_enabled = false;
 }
