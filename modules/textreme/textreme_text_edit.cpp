@@ -471,29 +471,18 @@ Array TextremeTextEdit::get_ranges() {
 	Array actual_answer;
 
 	auto process_symbol = [&](const String &line, int current_index, const String &symbol, Vector2 position, Vector2 prev_position) {
-		// print_line(vformat("working on %s, last symbol %s, is_open %d, found %d", String(&symbol), String(&last_symbol), int(is_open), range_trigger_symbols.find(String(&symbol))));
-		// print_line(range_trigger_symbols);
 
-		// if (is_open) {
-		// 	if (current_index == 0) {
-		// 		start_position = Vecto2(0, position.y);
-		// 	} else if(position.y != prev_position.y) {
-
-		// 	}
-		// }
-
+		//Check if current symbol is a range identifier
 		if (range_trigger_symbols.find(symbol) != -1) {
 			if (!is_open) {
+				// Open a new range
 				is_open = true;
 				last_symbol = symbol;
 				start_idx = current_index;
 				current_length = 1;
-				// if (current_index == 0) {
-				// 	start_position = Vecto2(0, position.y);
-				// } else {
-				// 	start_position = prev_position;
-				// }
 			} else if (last_symbol == symbol) {
+				// Close current range
+
 				// Flush string to temp answer
 				Dictionary data;
 				data["string"] = line.substr(start_idx, current_length);
@@ -513,6 +502,8 @@ Array TextremeTextEdit::get_ranges() {
 				current_length = 1;
 				is_open = false;
 			} else {
+				// Destroy current range and begin a different one
+
 				// Drop temp answer
 				temp_answer.clear();
 
@@ -525,6 +516,7 @@ Array TextremeTextEdit::get_ranges() {
 		}
 
 		if (is_open && current_index == (int)line.length() - 1) {
+			// Flush current range on the last of the line
 			Dictionary data;
 			data["string"] = line.substr(start_idx, current_length);
 			data["position"] = start_position;
@@ -533,25 +525,11 @@ Array TextremeTextEdit::get_ranges() {
 			temp_answer.push_back(data);			
 		}
 
-		// if (is_next_new_line) {
-		// 	// Flush string to temp answer
-		// 	if (is_open) {
-		// 		Dictionary data;
-		// 		data["string"] = line.substr(start_idx, current_length);
-		// 		data["position"] = start_position;
-		// 		data["type"] = last_symbol;
-
-		// 		temp_answer.push_back(data);
-		// 	}
-
-		// 	start_idx = 0;
-		// 	current_length = 1;
-		// 	start_position = Vector2(0, position.y + 1);
-		// }
-
 		++current_length;
 	};
 
+
+	// Offset in lines
 	int start_offset = 1;
 	Vector2 prev_position;
 
@@ -560,6 +538,7 @@ Array TextremeTextEdit::get_ranges() {
 		Vector<Vector2> current_line_positions = get_wrap_rows_character_positions(line_idx, start_offset);
 		String current_line = text[line_idx];
 
+		// Add new line
 		if (line_idx != (int)text.size() - 1) {
 			current_line += '\n';
 			if (current_line_positions.empty()) {
@@ -572,7 +551,7 @@ Array TextremeTextEdit::get_ranges() {
 
 		for(int chr_idx = 0; chr_idx < current_line.length(); ++chr_idx) {
 			String current_char = current_line.substr(chr_idx, 1);
-
+			
 			process_symbol(current_line, chr_idx, current_char, current_line_positions[chr_idx], prev_position);
 			prev_position = current_line_positions[chr_idx];
 		}
