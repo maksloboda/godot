@@ -458,6 +458,134 @@ void TextremeTextEdit::_update_scrollbars() {
 	updating_scrolls = false;
 }
 
+// Returns Array of Dictionaries
+Array TextremeTextEdit::get_ranges() {
+	// if is_open then substr(start_idx, current_length) is a potential non zero prefix of a range
+	String last_symbol = " ";
+	bool is_open = false;
+	int start_idx = 0;
+	int current_length = 1;
+	Vector2 start_position;
+
+	Array temp_answer;
+	Array actual_answer;
+
+	auto process_symbol = [&](const String &line, int current_index, const String &symbol, Vector2 position, Vector2 prev_position) {
+		// print_line(vformat("working on %s, last symbol %s, is_open %d, found %d", String(&symbol), String(&last_symbol), int(is_open), range_trigger_symbols.find(String(&symbol))));
+		// print_line(range_trigger_symbols);
+
+		// if (is_open) {
+		// 	if (current_index == 0) {
+		// 		start_position = Vecto2(0, position.y);
+		// 	} else if(position.y != prev_position.y) {
+
+		// 	}
+		// }
+
+		if (range_trigger_symbols.find(symbol) != -1) {
+			if (!is_open) {
+				is_open = true;
+				last_symbol = symbol;
+				start_idx = current_index;
+				current_length = 1;
+				// if (current_index == 0) {
+				// 	start_position = Vecto2(0, position.y);
+				// } else {
+				// 	start_position = prev_position;
+				// }
+			} else if (last_symbol == symbol) {
+				// Flush string to temp answer
+				Dictionary data;
+				data["string"] = line.substr(start_idx, current_length);
+				data["position"] = start_position;
+				data["type"] = last_symbol;
+
+				temp_answer.push_back(data);
+
+				// Flush strings to answer
+				for (int i = 0; i < temp_answer.size(); ++i) {
+					actual_answer.push_back(temp_answer[i]);
+				}
+
+				temp_answer.clear();
+
+				start_idx = current_index;
+				current_length = 1;
+				is_open = false;
+			} else {
+				// Drop temp answer
+				temp_answer.clear();
+
+				start_idx = current_index;
+				current_length = 1;
+				is_open = true;
+				last_symbol = symbol;
+				start_position = position;
+			}
+		}
+
+		if (is_open && current_index == (int)line.length() - 1) {
+			Dictionary data;
+			data["string"] = line.substr(start_idx, current_length);
+			data["position"] = start_position;
+			data["type"] = last_symbol;
+
+			temp_answer.push_back(data);			
+		}
+
+		// if (is_next_new_line) {
+		// 	// Flush string to temp answer
+		// 	if (is_open) {
+		// 		Dictionary data;
+		// 		data["string"] = line.substr(start_idx, current_length);
+		// 		data["position"] = start_position;
+		// 		data["type"] = last_symbol;
+
+		// 		temp_answer.push_back(data);
+		// 	}
+
+		// 	start_idx = 0;
+		// 	current_length = 1;
+		// 	start_position = Vector2(0, position.y + 1);
+		// }
+
+		++current_length;
+	};
+
+	int start_offset = 1;
+	Vector2 prev_position;
+
+	// Go though every line
+	for(int line_idx = 0; line_idx < (int)text.size(); ++line_idx) {
+		Vector<Vector2> current_line_positions = get_wrap_rows_character_positions(line_idx, start_offset);
+		String current_line = text[line_idx];
+
+		if (line_idx != (int)text.size() - 1) {
+			current_line += '\n';
+			if (current_line_positions.empty()) {
+				current_line_positions.push_back(Vector2(0, start_offset));
+			} else {
+				int last_id = current_line_positions.size() - 1;
+				current_line_positions.push_back(current_line_positions[last_id]);
+			}
+		}
+
+		for(int chr_idx = 0; chr_idx < current_line.length(); ++chr_idx) {
+			String current_char = current_line.substr(chr_idx, 1);
+
+			process_symbol(current_line, chr_idx, current_char, current_line_positions[chr_idx], prev_position);
+			prev_position = current_line_positions[chr_idx];
+		}
+		start_offset += times_line_wraps(line_idx) + 1;
+	}
+
+	return actual_answer;
+}
+
+void TextremeTextEdit::set_range_trigger_symbols(String p_trigger_symbols) {
+	range_trigger_symbols = p_trigger_symbols;
+}
+
 void TextremeTextEdit::_click_selection_held() {
 
 	// Warning: is_mouse_button_pressed(BUTTON_LEFT) returns false for double+ clicks, so this doesn't work for MODE_WORD
@@ -7382,6 +7510,10 @@ void TextremeTextEdit::_bind_methods() {
 	ClassDB::bind_method(D_METHOD("set_v_scroll_px", "new_value_px"), &TextremeTextEdit::set_v_scroll_px);
 	ClassDB::bind_method(D_METHOD("get_v_scroll_max_px"), &TextremeTextEdit::get_v_scroll_max_px);
 	ClassDB::bind_method(D_METHOD("set_v_scroll_enabled", "is_enabled"), &TextremeTextEdit::set_v_scroll_enabled);
+	ClassDB::bind_method(D_METHOD("get_ranges"), &TextremeTextEdit::get_ranges);
+
+
+	ClassDB::bind_method(D_METHOD("set_range_trigger_symbols", "new_trigger_symbols"), &TextremeTextEdit::set_range_trigger_symbols);
 
 	ADD_PROPERTY(PropertyInfo(Variant::STRING, "text", PROPERTY_HINT_MULTILINE_TEXT), "set_text", "get_text");
 	ADD_PROPERTY(PropertyInfo(Variant::BOOL, "readonly"), "set_readonly", "is_readonly");

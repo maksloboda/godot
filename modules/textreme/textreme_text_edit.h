@@ -445,6 +445,8 @@ private:
 
 	int executing_line;
 
+	String range_trigger_symbols;
+
 	void _generate_context_menu();
 
 	int get_visible_rows() const;
@@ -484,6 +486,10 @@ private:
 	void _update_scrollbars();
 	void _v_scroll_input();
 	void _click_selection_held();
+
+	Array get_ranges();
+
+	void set_range_trigger_symbols(String p_trigger_symbols);
 
 	void _update_selection_mode_pointer();
 	void _update_selection_mode_word();
