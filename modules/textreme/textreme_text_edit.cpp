@@ -482,6 +482,18 @@ Array TextremeTextEdit::get_ranges() {
 		// At the start of current iteration
 		// if is_open then line.substr(start_idx, current_length) is a string in [start_idx:current_index]
 
+		// Split current string on line end
+		if (position.y != prev_position.y && is_open) {
+
+			// Flush string to temp answer
+			auto data = get_string_dict(line, start_idx, current_length - 1, start_position, last_symbol);
+
+			temp_answer.push_back(data);
+
+			start_idx = current_index;
+			current_length = 1;
+		}
+
 		//Check if current symbol is a range identifier
 		if (range_trigger_symbols.find(symbol) != -1) {
 			if (!is_open) {
@@ -522,20 +534,17 @@ Array TextremeTextEdit::get_ranges() {
 			}
 		}
 
-		bool is_on_the_last_symbol = current_index == (int)line.length() - 1;
-		// bool is_wraped
-
-		if (is_open && (is_on_the_last_symbol)) { // || position.y != prev_position.y
+		// Split current string on line end
+		if (is_open && current_index == (int)line.length() - 1) {
 			// Flush current range on the last of the line
 			auto data = get_string_dict(line, start_idx, current_length, start_position, last_symbol);
 
 			temp_answer.push_back(data);
 
-			if (is_on_the_last_symbol) {
-				current_length = 0;
-				start_idx = 0;
-				start_position = position;	
-			}
+			
+			current_length = 0;
+			start_idx = 0;
+			start_position = position;
 		}
 
 		++current_length;
@@ -544,7 +553,7 @@ Array TextremeTextEdit::get_ranges() {
 
 	// Offset in lines
 	int start_offset = 1;
-	Vector2 prev_position;
+	Vector2 prev_position = Vector2(0, 1);
 
 	// Go though every line
 	for(int line_idx = 0; line_idx < (int)text.size(); ++line_idx) {
