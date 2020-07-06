@@ -158,6 +158,11 @@ public:
 	};
 
 private:
+
+	struct TextRegionInfo {
+		int row, start_col, end_col;
+	};
+
 	struct Cursor {
 		int last_fit_x;
 		int line, column; ///< cursor
@@ -413,7 +418,7 @@ private:
 	float v_scroll_speed;
 
 	bool is_v_scroll_enabled = true;
-	Array hidden_text_regions;
+	Vector<TextRegionInfo> hidden_text_regions;
 
 	String highlighted_word;
 

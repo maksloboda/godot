@@ -489,43 +489,51 @@ Array TextremeTextEdit::get_ranges(bool set_ranges_as_hidden) {
 	// Position of the first char's top left corner
 	Vector2 start_position;
 
+	Vector<TextRegionInfo> temp_hidden_regions;
+	Vector<TextRegionInfo> actual_hidden_regions;
+
 	// Used in case current range is invalid
 	Array temp_answer;
 	// Used for completed ranges
 	Array actual_answer;
 
-	auto commit_to_temp_answer = [this, &temp_answer](
-			const String &string,
-			int start,
-			int length,
-			Vector2 position, 
-			const String &type,
-			int row,
-			int start_col,
-			int end_col) {
+	auto commit_to_temp_answer = [&](
+			const String &p_string,
+			int p_start,
+			int p_length,
+			Vector2 p_position, 
+			const String &p_type,
+			int p_row,
+			int p_start_col,
+			int p_end_col) {
 
 		
-		String txt = string.substr(start, length);
+		String substring = p_string.substr(p_start, p_length);
 		
 		// No need to commit empty strings
-		if (txt == "") {
+		if (substring == "") {
 			return;
 		}
 
 		Dictionary data;
-		data["string"] = txt;
+		data["string"] = substring;
 
-		Vector2 actual_position = position;
-		actual_position.y = (actual_position.y - 1) * get_row_height();
-		actual_position.x -= cache.font->get_char_size(txt[0]).x;
+		Vector2 actual_position = Vector2(
+			p_position.x - cache.font->get_char_size(substring[0]).x,
+			(p_position.y - 1) * get_row_height());
+		// actual_position.y = (actual_position.y - 1) * get_row_height();
+		// actual_position.x -= cache.font->get_char_size(txt[0]).x;
 
 		data["position"] = actual_position;
-		data["type"] = type;
+		data["type"] = p_type;
 
-		data["row"] = row;
-		data["start_col"] = start_col;
-		data["end_col"] = end_col;
+		TextRegionInfo info;
 
+		info.row = p_row;
+		info.start_col = p_start_col;
+		info.end_col = p_end_col;
+
+		temp_hidden_regions.push_back(info);
 		temp_answer.push_back(data);
 	};
 
@@ -583,7 +591,13 @@ Array TextremeTextEdit::get_ranges(bool set_ranges_as_hidden) {
 					actual_answer.push_back(temp_answer[i]);
 				}
 
+
+				for (int i = 0; i < temp_hidden_regions.size(); ++i) {
+					actual_hidden_regions.push_back(temp_hidden_regions[i]);
+				}
+
 				temp_answer.clear();
+				temp_hidden_regions.clear();
 
 				start_col = current_index;
 				start_row = current_row;
@@ -655,7 +669,7 @@ Array TextremeTextEdit::get_ranges(bool set_ranges_as_hidden) {
 	}
 
 	if (set_ranges_as_hidden) {
-		hidden_text_regions = actual_answer;
+		hidden_text_regions = actual_hidden_regions;
 		update();
 	}
 
@@ -1299,7 +1313,6 @@ void TextremeTextEdit::_notification(int p_what) {
 			}
 
 			int current_hidden_range_idx = 0;
-			Dictionary lower_bound_region;
 
 			// draw main text
 			int line = first_visible_line;
@@ -1714,15 +1727,15 @@ void TextremeTextEdit::_notification(int p_what) {
 							bool is_char_inside_range = false;
 
 							while(current_hidden_range_idx < hidden_text_regions.size()) {
-								lower_bound_region = hidden_text_regions[current_hidden_range_idx];
+								const TextRegionInfo &lower_bound_region = hidden_text_regions[current_hidden_range_idx];
 
-								if ((int)lower_bound_region["row"] > line) {
+								if (lower_bound_region.row > line) {
 									break; // Found the lower bound for the region in lines
-								} else if ((int)lower_bound_region["row"] == line) {
-									if ((int)lower_bound_region["start_col"] > char_position_in_line) {
+								} else if (lower_bound_region.row == line) {
+									if (lower_bound_region.start_col > char_position_in_line) {
 										break; // Found the lower bound for the region in chars
-									} else if ((int)lower_bound_region["start_col"] <= char_position_in_line &&
-											char_position_in_line <= (int)lower_bound_region["end_col"]) {
+									} else if (lower_bound_region.start_col <= char_position_in_line &&
+											char_position_in_line <= lower_bound_region.end_col) {
 										is_char_inside_range = true;
 										break; // Found perfect bound;
 									}
