@@ -489,9 +489,21 @@ Array TextremeTextEdit::get_ranges() {
 		// if is_open then line.substr(start_idx, current_length) is a string in [start_idx:current_index]
 
 		// Split current string on line end
-		if (position.y != prev_position.y && is_open) {
+		if (is_open && position.y != prev_position.y) {
 
 			// Flush string to temp answer
+			auto data = get_string_dict(line, start_idx, current_length - 1, start_position, last_symbol);
+
+			temp_answer.push_back(data);
+
+			start_idx = current_index;
+			current_length = 1;
+			start_position = position;
+		}
+
+		// Split on tab character
+		if (is_open && current_index > 0 && line[current_index - 1] == '\t' && line[current_index] != '\t') {
+			print_line("Tab split");
 			auto data = get_string_dict(line, start_idx, current_length - 1, start_position, last_symbol);
 
 			temp_answer.push_back(data);
