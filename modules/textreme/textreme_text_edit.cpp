@@ -611,6 +611,7 @@ Array TextremeTextEdit::update_ranges() {
 
 				// Drop temp answer
 				temp_answer.clear();
+				temp_hidden_regions.clear();
 
 				start_col = p_col;
 				start_row = p_row;
