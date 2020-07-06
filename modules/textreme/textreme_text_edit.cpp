@@ -458,20 +458,51 @@ void TextremeTextEdit::_update_scrollbars() {
 	updating_scrolls = false;
 }
 
+// void TextremeTextEdit::set_disabled_text_regions(Array new_value) {
+	
+// 	for (int i = 0; i < new_value.size(); ++i) {
+// 		bool is_dict = new_value[i].get_type() == Variant::TYPE_DICTIONARY;
+// 		bool has_needed_atributes = false;
+
+// 		if (is_dict) {
+
+// 		}
+
+
+// 	}
+
+// 	disabled_text_regions = new_value;
+// }
+
 // Returns Array of Dictionaries
-Array TextremeTextEdit::get_ranges() {
+Array TextremeTextEdit::get_ranges(bool set_ranges_as_hidden) {
+	// Current open range symbol
 	String last_symbol = " ";
+	// Is a range open right now
 	bool is_open = false;
+	// Start row of current open range
 	int start_row = 0;
+	// Start column of current open range
 	int start_col = 0;
-	int start_idx = 0;
+	// Current length of the range (invariat is described inside loop body)
 	int current_length = 0;
+	// Position of the first char's top left corner
 	Vector2 start_position;
 
+	// Used in case current range is invalid
 	Array temp_answer;
+	// Used for completed ranges
 	Array actual_answer;
 
-	auto commit_to_temp_answer = [this, &temp_answer](const String &string, int start, int length, Vector2 position, const String &type) {
+	auto commit_to_temp_answer = [this, &temp_answer](
+			const String &string,
+			int start,
+			int length,
+			Vector2 position, 
+			const String &type,
+			int row,
+			int start_col,
+			int end_col) {
 
 		
 		String txt = string.substr(start, length);
@@ -490,21 +521,28 @@ Array TextremeTextEdit::get_ranges() {
 
 		data["position"] = actual_position;
 		data["type"] = type;
+
+		data["row"] = row;
+		data["start_col"] = start_col;
+		data["end_col"] = end_col;
+
 		temp_answer.push_back(data);
 	};
 
 	auto process_symbol = [&](const String &line, int current_row, int current_index, const String &symbol, Vector2 position, Vector2 prev_position) {
 
 		// At the start of current iteration
-		// if is_open then line.substr(start_idx, current_length) is a string in [start_idx:current_index]
+		// if is_open then line.substr(start_col, current_length) is a string in [start_col:current_index]
 
 		// Split current string on line end
 		if (is_open && position.y != prev_position.y) {
 
 			// Flush string to temp answer
-			commit_to_temp_answer(line, start_idx, current_length - 1, start_position, last_symbol);
+			commit_to_temp_answer(line, start_col, current_length - 1, start_position,
+					last_symbol, start_row, start_col, start_col + current_length - 2);
 
-			start_idx = current_index;
+			start_col = current_index;
+			start_row = current_row;
 			current_length = 1;
 			start_position = position;
 		}
@@ -512,9 +550,11 @@ Array TextremeTextEdit::get_ranges() {
 		// Split on tab character
 		if (is_open && current_index > 0 && line[current_index - 1] == '\t' && line[current_index] != '\t') {
 			
-			commit_to_temp_answer(line, start_idx, current_length - 1, start_position, last_symbol);
+			commit_to_temp_answer(line, start_col, current_length - 1, start_position,
+					last_symbol, start_row, start_col, start_col + current_length - 2);
 
-			start_idx = current_index;
+			start_col = current_index;
+			start_row = current_row;
 			current_length = 1;
 			start_position = position;
 		}
@@ -525,7 +565,8 @@ Array TextremeTextEdit::get_ranges() {
 				// Open a new range
 				is_open = true;
 				last_symbol = symbol;
-				start_idx = current_index;
+				start_col = current_index;
+				start_row = current_row;
 				current_length = 1;
 				start_position = position;
 				// start_col = current_index;
@@ -534,7 +575,8 @@ Array TextremeTextEdit::get_ranges() {
 				// Close current range
 
 				// Flush string to temp answer
-				commit_to_temp_answer(line, start_idx, current_length, start_position, last_symbol);
+				commit_to_temp_answer(line, start_col, current_length, start_position,
+						last_symbol, start_row, start_col, start_col + current_length - 1);
 
 				// Flush strings to answer
 				for (int i = 0; i < temp_answer.size(); ++i) {
@@ -543,7 +585,8 @@ Array TextremeTextEdit::get_ranges() {
 
 				temp_answer.clear();
 
-				start_idx = current_index;
+				start_col = current_index;
+				start_row = current_row;
 				current_length = 0;
 				is_open = false;
 				start_position = Vector2();
@@ -553,7 +596,8 @@ Array TextremeTextEdit::get_ranges() {
 				// Drop temp answer
 				temp_answer.clear();
 
-				start_idx = current_index;
+				start_col = current_index;
+				start_row = current_row;
 				current_length = 1;
 				is_open = true;
 				last_symbol = symbol;
@@ -566,10 +610,12 @@ Array TextremeTextEdit::get_ranges() {
 		// Split current string on line end
 		if (is_open && current_index == (int)line.length() - 1) {
 			// Flush current range on the last of the line
-			commit_to_temp_answer(line, start_idx, current_length, start_position, last_symbol);
+			commit_to_temp_answer(line, start_col, current_length, start_position,
+					last_symbol, start_row, start_col, start_col + current_length - 1);
 			
 			current_length = 0;
-			start_idx = 0;
+			start_col = 0;
+			start_row = current_row;
 			start_position = position;
 			// start_col = current_index;
 			// start_row = current_row;
@@ -606,6 +652,11 @@ Array TextremeTextEdit::get_ranges() {
 			prev_position = current_line_positions[chr_idx];
 		}
 		start_offset += times_line_wraps(line_idx) + 1;
+	}
+
+	if (set_ranges_as_hidden) {
+		hidden_text_regions = actual_answer;
+		update();
 	}
 
 	return actual_answer;
@@ -1247,6 +1298,9 @@ void TextremeTextEdit::_notification(int p_what) {
 				}
 			}
 
+			int current_hidden_range_idx = 0;
+			Dictionary lower_bound_region;
+
 			// draw main text
 			int line = first_visible_line;
 			for (int i = 0; i < draw_amount; i++) {
@@ -1280,6 +1334,7 @@ void TextremeTextEdit::_notification(int p_what) {
 				Vector<String> wrap_rows = get_wrap_rows_text(line);
 				int line_wrap_amount = times_line_wraps(line);
 				int last_wrap_column = 0;
+				int char_position_in_line = 0;
 
 				for (int line_wrap_index = 0; line_wrap_index < line_wrap_amount + 1; line_wrap_index++) {
 					if (line_wrap_index != 0) {
@@ -1456,7 +1511,7 @@ void TextremeTextEdit::_notification(int p_what) {
 
 					// Loop through characters in one line.
 					int j = 0;
-					for (; j < str.length(); j++) {
+					for (; j < str.length(); j++, char_position_in_line++) {
 
 						if (syntax_coloring) {
 							if (color_map.has(last_wrap_column + j)) {
@@ -1655,11 +1710,41 @@ void TextremeTextEdit::_notification(int p_what) {
 						}
 
 						if (str[j] >= 32) {
+
+							bool is_char_inside_range = false;
+
+							while(current_hidden_range_idx < hidden_text_regions.size()) {
+								lower_bound_region = hidden_text_regions[current_hidden_range_idx];
+
+								if ((int)lower_bound_region["row"] > line) {
+									break; // Found the lower bound for the region in lines
+								} else if ((int)lower_bound_region["row"] == line) {
+									if ((int)lower_bound_region["start_col"] > char_position_in_line) {
+										break; // Found the lower bound for the region in chars
+									} else if ((int)lower_bound_region["start_col"] <= char_position_in_line &&
+											char_position_in_line <= (int)lower_bound_region["end_col"]) {
+										is_char_inside_range = true;
+										break; // Found perfect bound;
+									}
+								}
+
+								++current_hidden_range_idx;
+							}
+
 							int yofs = ofs_y + (get_row_height() - cache.font->get_height()) / 2;
 							int x_shadow_offset = get_constant("drop_shadow_x_offset");
 							int y_shadow_offset = get_constant("drop_shadow_y_offset");
-							drawer.draw_char(ci, Point2i(char_ofs + char_margin + ofs_x + x_shadow_offset, yofs + ascent + y_shadow_offset), str[j], str[j + 1], cache.drop_shadow_color);
-							int w = drawer.draw_char(ci, Point2i(char_ofs + char_margin + ofs_x, yofs + ascent), str[j], str[j + 1], in_selection && override_selected_font_color ? cache.font_color_selected : color);
+
+							Color shadow_color = cache.drop_shadow_color;
+							Color char_color = in_selection && override_selected_font_color ? cache.font_color_selected : color;
+
+							if (is_char_inside_range) {
+								shadow_color.a = 0.0;
+								char_color.a = 0.0;
+							}
+
+							drawer.draw_char(ci, Point2i(char_ofs + char_margin + ofs_x + x_shadow_offset, yofs + ascent + y_shadow_offset), str[j], str[j + 1], shadow_color);
+							int w = drawer.draw_char(ci, Point2i(char_ofs + char_margin + ofs_x, yofs + ascent), str[j], str[j + 1], char_color);
 							if (underlined) {
 								float line_width = 1.0;
 #ifdef TOOLS_ENABLED
@@ -7539,7 +7624,7 @@ void TextremeTextEdit::_bind_methods() {
 	ClassDB::bind_method(D_METHOD("set_v_scroll_px", "new_value_px"), &TextremeTextEdit::set_v_scroll_px);
 	ClassDB::bind_method(D_METHOD("get_v_scroll_max_px"), &TextremeTextEdit::get_v_scroll_max_px);
 	ClassDB::bind_method(D_METHOD("set_v_scroll_enabled", "is_enabled"), &TextremeTextEdit::set_v_scroll_enabled);
-	ClassDB::bind_method(D_METHOD("get_ranges"), &TextremeTextEdit::get_ranges);
+	ClassDB::bind_method(D_METHOD("get_ranges", "set_ranges_as_hidden"), &TextremeTextEdit::get_ranges);
 
 
 	ClassDB::bind_method(D_METHOD("set_range_trigger_symbols", "new_trigger_symbols"), &TextremeTextEdit::set_range_trigger_symbols);

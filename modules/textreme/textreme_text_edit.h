@@ -413,6 +413,7 @@ private:
 	float v_scroll_speed;
 
 	bool is_v_scroll_enabled = true;
+	Array hidden_text_regions;
 
 	String highlighted_word;
 
@@ -487,7 +488,7 @@ private:
 	void _v_scroll_input();
 	void _click_selection_held();
 
-	Array get_ranges();
+	Array get_ranges(bool set_ranges_as_hidden);
 
 	void set_range_trigger_symbols(String p_trigger_symbols);
 
