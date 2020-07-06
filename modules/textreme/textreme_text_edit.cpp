@@ -462,6 +462,8 @@ void TextremeTextEdit::_update_scrollbars() {
 Array TextremeTextEdit::get_ranges() {
 	String last_symbol = " ";
 	bool is_open = false;
+	int start_row = 0;
+	int start_col = 0;
 	int start_idx = 0;
 	int current_length = 0;
 	Vector2 start_position;
@@ -469,9 +471,17 @@ Array TextremeTextEdit::get_ranges() {
 	Array temp_answer;
 	Array actual_answer;
 
-	auto get_string_dict = [this](const String &string, int start, int length, Vector2 position, const String &type) {
-		Dictionary data;
+	auto commit_to_temp_answer = [this, &temp_answer](const String &string, int start, int length, Vector2 position, const String &type) {
+
+		
 		String txt = string.substr(start, length);
+		
+		// No need to commit empty strings
+		if (txt == "") {
+			return;
+		}
+
+		Dictionary data;
 		data["string"] = txt;
 
 		Vector2 actual_position = position;
@@ -480,10 +490,10 @@ Array TextremeTextEdit::get_ranges() {
 
 		data["position"] = actual_position;
 		data["type"] = type;
-		return data;
+		temp_answer.push_back(data);
 	};
 
-	auto process_symbol = [&](const String &line, int current_index, const String &symbol, Vector2 position, Vector2 prev_position) {
+	auto process_symbol = [&](const String &line, int current_row, int current_index, const String &symbol, Vector2 position, Vector2 prev_position) {
 
 		// At the start of current iteration
 		// if is_open then line.substr(start_idx, current_length) is a string in [start_idx:current_index]
@@ -492,9 +502,7 @@ Array TextremeTextEdit::get_ranges() {
 		if (is_open && position.y != prev_position.y) {
 
 			// Flush string to temp answer
-			auto data = get_string_dict(line, start_idx, current_length - 1, start_position, last_symbol);
-
-			temp_answer.push_back(data);
+			commit_to_temp_answer(line, start_idx, current_length - 1, start_position, last_symbol);
 
 			start_idx = current_index;
 			current_length = 1;
@@ -503,10 +511,8 @@ Array TextremeTextEdit::get_ranges() {
 
 		// Split on tab character
 		if (is_open && current_index > 0 && line[current_index - 1] == '\t' && line[current_index] != '\t') {
-			print_line("Tab split");
-			auto data = get_string_dict(line, start_idx, current_length - 1, start_position, last_symbol);
-
-			temp_answer.push_back(data);
+			
+			commit_to_temp_answer(line, start_idx, current_length - 1, start_position, last_symbol);
 
 			start_idx = current_index;
 			current_length = 1;
@@ -522,13 +528,13 @@ Array TextremeTextEdit::get_ranges() {
 				start_idx = current_index;
 				current_length = 1;
 				start_position = position;
+				// start_col = current_index;
+				// start_row = current_row;
 			} else if (last_symbol == symbol) {
 				// Close current range
 
 				// Flush string to temp answer
-				auto data = get_string_dict(line, start_idx, current_length, start_position, last_symbol);
-
-				temp_answer.push_back(data);
+				commit_to_temp_answer(line, start_idx, current_length, start_position, last_symbol);
 
 				// Flush strings to answer
 				for (int i = 0; i < temp_answer.size(); ++i) {
@@ -552,20 +558,21 @@ Array TextremeTextEdit::get_ranges() {
 				is_open = true;
 				last_symbol = symbol;
 				start_position = position;
+				// start_col = current_index;
+				// start_row = current_row;
 			}
 		}
 
 		// Split current string on line end
 		if (is_open && current_index == (int)line.length() - 1) {
 			// Flush current range on the last of the line
-			auto data = get_string_dict(line, start_idx, current_length, start_position, last_symbol);
-
-			temp_answer.push_back(data);
-
+			commit_to_temp_answer(line, start_idx, current_length, start_position, last_symbol);
 			
 			current_length = 0;
 			start_idx = 0;
 			start_position = position;
+			// start_col = current_index;
+			// start_row = current_row;
 		}
 
 		++current_length;
@@ -595,7 +602,7 @@ Array TextremeTextEdit::get_ranges() {
 		for(int chr_idx = 0; chr_idx < current_line.length(); ++chr_idx) {
 			String current_char = current_line.substr(chr_idx, 1);
 
-			process_symbol(current_line, chr_idx, current_char, current_line_positions[chr_idx], prev_position);
+			process_symbol(current_line, line_idx, chr_idx, current_char, current_line_positions[chr_idx], prev_position);
 			prev_position = current_line_positions[chr_idx];
 		}
 		start_offset += times_line_wraps(line_idx) + 1;
