@@ -475,7 +475,7 @@ void TextremeTextEdit::_update_scrollbars() {
 // }
 
 // Returns Array of Dictionaries
-Array TextremeTextEdit::get_ranges(bool set_ranges_as_hidden) {
+Array TextremeTextEdit::update_ranges() {
 	// Current open range symbol
 	String last_symbol = " ";
 	// Is a range open right now
@@ -666,10 +666,8 @@ Array TextremeTextEdit::get_ranges(bool set_ranges_as_hidden) {
 		start_offset += times_line_wraps(line_idx) + 1;
 	}
 
-	if (set_ranges_as_hidden) {
-		hidden_text_regions = actual_hidden_regions;
-		update();
-	}
+	hidden_text_regions = actual_hidden_regions;
+	update();
 
 	return actual_answer;
 }
@@ -7635,9 +7633,7 @@ void TextremeTextEdit::_bind_methods() {
 	ClassDB::bind_method(D_METHOD("set_v_scroll_px", "new_value_px"), &TextremeTextEdit::set_v_scroll_px);
 	ClassDB::bind_method(D_METHOD("get_v_scroll_max_px"), &TextremeTextEdit::get_v_scroll_max_px);
 	ClassDB::bind_method(D_METHOD("set_v_scroll_enabled", "is_enabled"), &TextremeTextEdit::set_v_scroll_enabled);
-	ClassDB::bind_method(D_METHOD("get_ranges", "set_ranges_as_hidden"), &TextremeTextEdit::get_ranges);
-
-
+	ClassDB::bind_method(D_METHOD("update_ranges"), &TextremeTextEdit::update_ranges);
 	ClassDB::bind_method(D_METHOD("set_range_trigger_symbols", "new_trigger_symbols"), &TextremeTextEdit::set_range_trigger_symbols);
 
 	ADD_PROPERTY(PropertyInfo(Variant::STRING, "text", PROPERTY_HINT_MULTILINE_TEXT), "set_text", "get_text");

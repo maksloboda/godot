@@ -493,7 +493,7 @@ private:
 	void _v_scroll_input();
 	void _click_selection_held();
 
-	Array get_ranges(bool set_ranges_as_hidden);
+	Array update_ranges();
 
 	void set_range_trigger_symbols(String p_trigger_symbols);
 
