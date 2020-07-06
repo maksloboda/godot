@@ -521,8 +521,6 @@ Array TextremeTextEdit::get_ranges(bool set_ranges_as_hidden) {
 		Vector2 actual_position = Vector2(
 			p_position.x - cache.font->get_char_size(substring[0]).x,
 			(p_position.y - 1) * get_row_height());
-		// actual_position.y = (actual_position.y - 1) * get_row_height();
-		// actual_position.x -= cache.font->get_char_size(txt[0]).x;
 
 		data["position"] = actual_position;
 		data["type"] = p_type;
@@ -4351,7 +4349,7 @@ void TextremeTextEdit::_insert_text(int p_line, int p_char, const String &p_text
 	int retline, retchar;
 	_base_insert_text(p_line, p_char, p_text, retline, retchar);
 
-	Array positions = get_positions(p_line, p_char, retline, retchar);
+	Array positions = get_text_positions_piece(p_line, p_char, retline, retchar);
 	String parced_text = _base_get_text(p_line, p_char, retline, retchar);
 
 	emit_signal("on_text_added", parced_text, positions);
@@ -4399,7 +4397,7 @@ void TextremeTextEdit::_insert_text(int p_line, int p_char, const String &p_text
 	current_op.version = op.version;
 }
 
-Array TextremeTextEdit::get_positions(int p_from_line, int p_from_column, int p_to_line, int p_to_column) const {
+Array TextremeTextEdit::get_text_positions_piece(int p_from_line, int p_from_column, int p_to_line, int p_to_column) const {
 
 	ERR_FAIL_INDEX_V(p_from_line, text.size(), Array());
 	ERR_FAIL_INDEX_V(p_from_column, text[p_from_line].length() + 1, Array());
@@ -4447,7 +4445,7 @@ void TextremeTextEdit::_remove_text(int p_from_line, int p_from_column, int p_to
 		idle_detect->start();
 
 	String text = _base_get_text(p_from_line, p_from_column, p_to_line, p_to_column);
-	Array text_positions = get_positions(p_from_line, p_from_column, p_to_line, p_to_column);
+	Array text_positions = get_text_positions_piece(p_from_line, p_from_column, p_to_line, p_to_column);
 	emit_signal("on_text_removed", text, text_positions);
 	if (undo_enabled) {
 		_clear_redo();
@@ -6502,14 +6500,14 @@ void TextremeTextEdit::_do_text_op(const TextOperation &p_op, bool p_reverse) {
 		ERR_FAIL_COND(check_column != p_op.to_column); // BUG.
 
 
-		Array positions = get_positions(p_op.from_line, p_op.from_column, check_line, check_column);
+		Array positions = get_text_positions_piece(p_op.from_line, p_op.from_column, check_line, check_column);
 		String parced_text = _base_get_text(p_op.from_line, p_op.from_column, check_line, check_column);
 
 		emit_signal("on_text_added", parced_text, positions);
 
 	} else {
 
-		Array positions = get_positions(p_op.from_line, p_op.from_column, p_op.to_line, p_op.to_column);
+		Array positions = get_text_positions_piece(p_op.from_line, p_op.from_column, p_op.to_line, p_op.to_column);
 		String parced_text = _base_get_text(p_op.from_line, p_op.from_column, p_op.to_line, p_op.to_column);
 
 		emit_signal("on_text_removed", parced_text, positions);
@@ -7632,7 +7630,7 @@ void TextremeTextEdit::_bind_methods() {
 	ClassDB::bind_method(D_METHOD("get_line_character_positions", "line_idx"), &TextremeTextEdit::get_line_character_positions);
 	ClassDB::bind_method(D_METHOD("get_row_height"), &TextremeTextEdit::get_row_height);
 	ClassDB::bind_method(D_METHOD("get_text_piece", "from_line", "from_column", "to_line", "to_column"), &TextremeTextEdit::_base_get_text);
-	ClassDB::bind_method(D_METHOD("get_text_positions_piece", "from_line", "from_column", "to_line", "to_column"), &TextremeTextEdit::get_positions);
+	ClassDB::bind_method(D_METHOD("get_text_positions_piece", "from_line", "from_column", "to_line", "to_column"), &TextremeTextEdit::get_text_positions_piece);
 	ClassDB::bind_method(D_METHOD("get_v_scroll_px"), &TextremeTextEdit::get_v_scroll_px);
 	ClassDB::bind_method(D_METHOD("set_v_scroll_px", "new_value_px"), &TextremeTextEdit::set_v_scroll_px);
 	ClassDB::bind_method(D_METHOD("get_v_scroll_max_px"), &TextremeTextEdit::get_v_scroll_max_px);
