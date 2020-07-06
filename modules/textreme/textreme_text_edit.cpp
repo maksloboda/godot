@@ -535,53 +535,57 @@ Array TextremeTextEdit::update_ranges() {
 		temp_answer.push_back(data);
 	};
 
-	auto process_symbol = [&](const String &line, int current_row, int current_index, const String &symbol, Vector2 position, Vector2 prev_position) {
+	auto process_symbol = [&](
+		const String &p_line,
+		int p_row,
+		int p_col,
+		const String &p_current_char,
+		Vector2 p_position,
+		Vector2 p_prev_position) {
 
 		// At the start of current iteration
-		// if is_open then line.substr(start_col, current_length) is a string in [start_col:current_index]
+		// if is_open then line.substr(start_col, current_length) is a string in [start_col:p_col]
 
 		// Split current string on line end
-		if (is_open && position.y != prev_position.y) {
+		if (is_open && p_position.y != p_prev_position.y) {
 
 			// Flush string to temp answer
-			commit_to_temp_answer(line, start_col, current_length - 1, start_position,
+			commit_to_temp_answer(p_line, start_col, current_length - 1, start_position,
 					last_symbol, start_row, start_col, start_col + current_length - 2);
 
-			start_col = current_index;
-			start_row = current_row;
+			start_col = p_col;
+			start_row = p_row;
 			current_length = 1;
-			start_position = position;
+			start_position = p_position;
 		}
 
 		// Split on tab character
-		if (is_open && current_index > 0 && line[current_index - 1] == '\t' && line[current_index] != '\t') {
+		if (is_open && p_col > 0 && p_line[p_col - 1] == '\t' && p_line[p_col] != '\t') {
 			
-			commit_to_temp_answer(line, start_col, current_length - 1, start_position,
+			commit_to_temp_answer(p_line, start_col, current_length - 1, start_position,
 					last_symbol, start_row, start_col, start_col + current_length - 2);
 
-			start_col = current_index;
-			start_row = current_row;
+			start_col = p_col;
+			start_row = p_row;
 			current_length = 1;
-			start_position = position;
+			start_position = p_position;
 		}
 
 		//Check if current symbol is a range identifier
-		if (range_trigger_symbols.find(symbol) != -1) {
+		if (range_trigger_symbols.find(p_current_char) != -1) {
 			if (!is_open) {
 				// Open a new range
 				is_open = true;
-				last_symbol = symbol;
-				start_col = current_index;
-				start_row = current_row;
+				last_symbol = p_current_char;
+				start_col = p_col;
+				start_row = p_row;
 				current_length = 1;
-				start_position = position;
-				// start_col = current_index;
-				// start_row = current_row;
-			} else if (last_symbol == symbol) {
+				start_position = p_position;
+			} else if (last_symbol == p_current_char) {
 				// Close current range
 
 				// Flush string to temp answer
-				commit_to_temp_answer(line, start_col, current_length, start_position,
+				commit_to_temp_answer(p_line, start_col, current_length, start_position,
 						last_symbol, start_row, start_col, start_col + current_length - 1);
 
 				// Flush strings to answer
@@ -597,8 +601,8 @@ Array TextremeTextEdit::update_ranges() {
 				temp_answer.clear();
 				temp_hidden_regions.clear();
 
-				start_col = current_index;
-				start_row = current_row;
+				start_col = p_col;
+				start_row = p_row;
 				current_length = 0;
 				is_open = false;
 				start_position = Vector2();
@@ -608,29 +612,25 @@ Array TextremeTextEdit::update_ranges() {
 				// Drop temp answer
 				temp_answer.clear();
 
-				start_col = current_index;
-				start_row = current_row;
+				start_col = p_col;
+				start_row = p_row;
 				current_length = 1;
 				is_open = true;
-				last_symbol = symbol;
-				start_position = position;
-				// start_col = current_index;
-				// start_row = current_row;
+				last_symbol = p_current_char;
+				start_position = p_position;
 			}
 		}
 
 		// Split current string on line end
-		if (is_open && current_index == (int)line.length() - 1) {
+		if (is_open && p_col == (int)p_line.length() - 1) {
 			// Flush current range on the last of the line
-			commit_to_temp_answer(line, start_col, current_length, start_position,
+			commit_to_temp_answer(p_line, start_col, current_length, start_position,
 					last_symbol, start_row, start_col, start_col + current_length - 1);
 			
 			current_length = 0;
 			start_col = 0;
-			start_row = current_row;
-			start_position = position;
-			// start_col = current_index;
-			// start_row = current_row;
+			start_row = p_row;
+			start_position = p_position;
 		}
 
 		++current_length;
