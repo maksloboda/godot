@@ -4738,74 +4738,31 @@ Vector<Vector2> TextremeTextEdit::get_wrap_rows_character_positions(int p_line, 
 
 	Vector<Vector2> positions;
 
-	int px = 0;
-	int col = 0;
-	String line_text = text[p_line];
-
-	int word_px = 0;
-	Vector<Vector2> wrap_word_pos;
-	int cur_wrap_index = 0;
+	Vector<String> strings = get_wrap_rows_text(p_line);
 
 	int tab_offset_px = get_indent_level(p_line) * cache.font->get_char_size(' ').width;
 	if (tab_offset_px >= wrap_at) {
 		tab_offset_px = 0;
 	}
 
-	int indent_ofs = 0;
+	for (int wrap_index = 0; wrap_index < strings.size(); ++wrap_index) {
+		int indent_ofs = (wrap_index != 0 ? tab_offset_px : 0);
+		int px = indent_ofs;
 
-	auto commit_word_positions = [&](int offset_x, int offset_y) {
-		for(int word_idx = 0; word_idx < wrap_word_pos.size(); ++word_idx) {
-			Vector2 pos = wrap_word_pos[word_idx];
-			pos.x += offset_x;
-			pos.y = cur_wrap_index + offset_y;
-			positions.push_back(pos);
+		const String &current_wrap_string = strings[wrap_index];
+
+		for (int char_idx = 0; char_idx < current_wrap_string.length(); ++char_idx) {
+			int w = text.get_char_width(
+				current_wrap_string[char_idx],
+				current_wrap_string[char_idx + 1],
+				px
+			);
+			px += w;
+
+			positions.push_back(Vector2(px, y_off + wrap_index));
 		}
 
-		wrap_word_pos.clear();
-	};
-
-	while (col < line_text.length()) {
-		CharType c = line_text[col];
-		int w = text.get_char_width(c, line_text[col + 1], px + word_px);
-
-		indent_ofs = (cur_wrap_index != 0 ? tab_offset_px : 0);
-
-		if (indent_ofs + word_px + w > wrap_at) {
-			// Not enough space to add this char; start next line.
-			
-			commit_word_positions(indent_ofs, y_off);
-
-			cur_wrap_index++;
-			wrap_word_pos.push_back(Vector2(w, 0));
-			px = 0;
-			word_px = w;
-		} else {
-			word_px += w;
-			wrap_word_pos.push_back(Vector2(word_px, 0));
-			// word_str += c;
-			if (c == ' ') {
-				// End of a word; add this word to the substring.
-				commit_word_positions(indent_ofs + px, y_off);
-				px += word_px;
-				word_px = 0;
-			}
-
-			if (indent_ofs + px + word_px > wrap_at) {
-				// This word will be moved to the next line.
-				// lines.push_back(wrap_substring);
-				// Reset for next wrap.
-				cur_wrap_index++;
-				px = 0;
-			}
-		}
-		col++;
 	}
-	// Line ends before hit wrap_at; add this word to the substring.
-	indent_ofs = (cur_wrap_index != 0 ? tab_offset_px : 0);
-	commit_word_positions(indent_ofs + px, y_off);
-
-	// Update cache.
-	// text.set_character_positions(p_line, positions);
 
 	return positions;
 }
@@ -4835,6 +4792,9 @@ Vector<String> TextremeTextEdit::get_wrap_rows_text(int p_line) const {
 		tab_offset_px = 0;
 	}
 
+	// Doesnt count tabs
+	bool is_current_word_first = true;
+
 	while (col < line_text.length()) {
 		CharType c = line_text[col];
 		int w = text.get_char_width(c, line_text[col + 1], px + word_px);
@@ -4842,7 +4802,9 @@ Vector<String> TextremeTextEdit::get_wrap_rows_text(int p_line) const {
 
 		int indent_ofs = (cur_wrap_index != 0 ? tab_offset_px : 0);
 
-		if (indent_ofs + word_px + w > wrap_at) {
+		print_line(vformat("is the first first:%d, current length %d, wrap at %d", int(is_current_word_first), indent_ofs + px + word_px, wrap_at));
+
+		if (indent_ofs + word_px + w > wrap_at || (is_current_word_first && indent_ofs + px + word_px > wrap_at)) {
 			// Not enough space to add this char; start next line.
 			wrap_substring += word_str;
 			lines.push_back(wrap_substring);
@@ -4855,12 +4817,17 @@ Vector<String> TextremeTextEdit::get_wrap_rows_text(int p_line) const {
 			int single_w = text.get_char_width(c, line_text[col + 1], 0);
 			word_px = single_w;
 			new_line_word_px = single_w;
+			is_current_word_first = true;
 		} else {
 			word_str += c;
 			word_px += w;
 			new_line_word_px += new_line_w;
-			if (c == ' ') {
+			if (c == ' ' || c == '\t') {
 				// End of a word; add this word to the substring.
+				if (word_str != "\t") {
+					is_current_word_first = false;
+				}
+
 				wrap_substring += word_str;
 				px += word_px;
 				word_str = "";
@@ -4876,6 +4843,7 @@ Vector<String> TextremeTextEdit::get_wrap_rows_text(int p_line) const {
 				wrap_substring = "";
 				px = 0;
 				word_px = new_line_word_px;
+				is_current_word_first = true;
 			}
 		}
 		col++;
