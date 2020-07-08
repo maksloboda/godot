@@ -4783,7 +4783,6 @@ Vector<String> TextremeTextEdit::get_wrap_rows_text(int p_line) const {
 	String wrap_substring = "";
 
 	int word_px = 0;
-	int new_line_word_px = 0;
 	String word_str = "";
 	int cur_wrap_index = 0;
 
@@ -4792,19 +4791,13 @@ Vector<String> TextremeTextEdit::get_wrap_rows_text(int p_line) const {
 		tab_offset_px = 0;
 	}
 
-	// Doesnt count tabs
-	bool is_current_word_first = true;
-
 	while (col < line_text.length()) {
 		CharType c = line_text[col];
 		int w = text.get_char_width(c, line_text[col + 1], px + word_px);
-		int new_line_w = text.get_char_width(c, line_text[col + 1], word_px);
 
 		int indent_ofs = (cur_wrap_index != 0 ? tab_offset_px : 0);
 
-		print_line(vformat("is the first first:%d, current length %d, wrap at %d", int(is_current_word_first), indent_ofs + px + word_px, wrap_at));
-
-		if (indent_ofs + word_px + w > wrap_at || (is_current_word_first && indent_ofs + px + word_px > wrap_at)) {
+		if (indent_ofs + word_px + w > wrap_at) {
 			// Not enough space to add this char; start next line.
 			wrap_substring += word_str;
 			lines.push_back(wrap_substring);
@@ -4816,23 +4809,14 @@ Vector<String> TextremeTextEdit::get_wrap_rows_text(int p_line) const {
 			word_str += c;
 			int single_w = text.get_char_width(c, line_text[col + 1], 0);
 			word_px = single_w;
-			new_line_word_px = single_w;
-			is_current_word_first = true;
 		} else {
 			word_str += c;
 			word_px += w;
-			new_line_word_px += new_line_w;
-			if (c == ' ' || c == '\t') {
-				// End of a word; add this word to the substring.
-				if (word_str != "\t") {
-					is_current_word_first = false;
-				}
-
+			if (c == ' ') {
 				wrap_substring += word_str;
 				px += word_px;
 				word_str = "";
 				word_px = 0;
-				new_line_word_px = 0;
 			}
 
 			if (indent_ofs + px + word_px > wrap_at) {
@@ -4842,8 +4826,6 @@ Vector<String> TextremeTextEdit::get_wrap_rows_text(int p_line) const {
 				cur_wrap_index++;
 				wrap_substring = "";
 				px = 0;
-				word_px = new_line_word_px;
-				is_current_word_first = true;
 			}
 		}
 		col++;
