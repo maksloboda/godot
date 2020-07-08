@@ -471,6 +471,8 @@ private:
 	int get_line_wrap_index_at_col(int p_line, int p_column) const;
 	int get_char_count();
 
+	int get_render_offset_px();
+
 	double get_scroll_pos_for_line(int p_line, int p_wrap_index = 0) const;
 	void set_line_as_first_visible(int p_line, int p_wrap_index = 0);
 	void set_line_as_center_visible(int p_line, int p_wrap_index = 0);
@@ -767,6 +769,7 @@ public:
 	double get_v_scroll_px() const;
 	double get_v_scroll_max_px() const;
 	double get_v_scroll() const;
+	// void _on_v_scroll_changed(double new_value);
 	void set_v_scroll(double p_scroll);
 	void set_v_scroll_px(double p_scroll_px);
 

@@ -356,7 +356,6 @@ int TextremeTextEdit::Text::get_char_width(CharType c, CharType next_c, int px) 
 }
 
 void TextremeTextEdit::_update_scrollbars() {
-	// print_line("Updated the scrollbars.");
 	Size2 size = get_size();
 	Size2 hmin = h_scroll->get_combined_minimum_size();
 	Size2 vmin = v_scroll->get_combined_minimum_size();
@@ -427,14 +426,15 @@ void TextremeTextEdit::_update_scrollbars() {
 			v_scroll->set_step(1);
 		}
 		set_v_scroll(get_v_scroll());
-		emit_signal("on_v_scroll_changed", get_v_scroll_px());
 		emit_signal("on_v_scroll_visibility_changed", true);
+		emit_signal("on_render_offset_px_changed", get_render_offset_px());
 	} else {
 		cursor.line_ofs = 0;
 		cursor.wrap_ofs = 0;
 		v_scroll->set_value(0);
 		v_scroll->hide();
 		emit_signal("on_v_scroll_visibility_changed", false);
+		emit_signal("on_render_offset_px_changed", get_render_offset_px());
 	}
 
 	if (use_hscroll && !is_wrap_enabled()) {
@@ -900,7 +900,6 @@ void TextremeTextEdit::_notification(int p_what) {
 				} else {
 					set_v_scroll(get_v_scroll() + vel);
 				}
-				emit_signal("on_v_scroll_changed", get_v_scroll_px());
 			} else {
 				scrolling = false;
 				minimap_clicked = false;
@@ -4094,7 +4093,6 @@ void TextremeTextEdit::_scroll_up(real_t p_delta) {
 		}
 	} else {
 		set_v_scroll(target_v_scroll);
-		emit_signal("on_v_scroll_changed", get_v_scroll_px());
 	}
 }
 
@@ -4124,7 +4122,6 @@ void TextremeTextEdit::_scroll_down(real_t p_delta) {
 		}
 	} else {
 		set_v_scroll(target_v_scroll);
-		emit_signal("on_v_scroll_changed", get_v_scroll_px());
 	}
 }
 
@@ -4157,7 +4154,6 @@ void TextremeTextEdit::_scroll_lines_up() {
 
 	// Adjust the vertical scroll.
 	set_v_scroll(get_v_scroll() - 1);
-	emit_signal("on_v_scroll_changed", get_v_scroll_px());
 
 	// Adjust the cursor to viewport.
 	if (!selection.active) {
@@ -4178,7 +4174,6 @@ void TextremeTextEdit::_scroll_lines_down() {
 
 	// Adjust the vertical scroll.
 	set_v_scroll(get_v_scroll() + 1);
-	emit_signal("on_v_scroll_changed", get_v_scroll_px());
 
 	// Adjust the cursor to viewport.
 	if (!selection.active) {
@@ -4427,7 +4422,6 @@ Array TextremeTextEdit::get_text_positions_piece(int p_from_line, int p_from_col
 			}
 		}
 		Vector<Vector2> ans = get_wrap_rows_character_positions(i, start_offset);
-		// print_line(vformat("Returned position size %d", ans.size()));
 		ERR_FAIL_COND_V_MSG(begin > ans.size() + 1 || end > ans.size() + 1, Array(), "TetremeTextEdit: Failed to get position due to indexing error.")
 		start_offset += times_line_wraps(i) + 1;
 		for (int pos = begin; pos < end; ++pos) {
@@ -5000,6 +4994,10 @@ void TextremeTextEdit::_v_scroll_input() {
 
 void TextremeTextEdit::_scroll_moved(double p_to_val) {
 
+	if (v_scroll->is_visible_in_tree()) {
+		emit_signal("on_v_scroll_changed", get_v_scroll_px());
+	}
+
 	if (updating_scrolls)
 		return;
 
@@ -5026,6 +5024,7 @@ void TextremeTextEdit::_scroll_moved(double p_to_val) {
 
 		cursor.line_ofs = n_line;
 		cursor.wrap_ofs = wi;
+		emit_signal("on_render_offset_px_changed", get_render_offset_px());
 	}
 	update();
 }
@@ -6010,8 +6009,6 @@ bool TextremeTextEdit::search(const String &p_key, uint32_t p_search_flags, int 
 }
 
 void TextremeTextEdit::_cursor_changed_emit() {
-
-	// print_line(vformat("Last visible line: %d\n Current line: %d \nLast visible wrap: %d", get_last_visible_line(), cursor_get_line(), get_last_visible_line_wrap_index()));
 	emit_signal("cursor_changed");
 	cursor_changed_dirty = false;
 }
@@ -6717,7 +6714,6 @@ double TextremeTextEdit::get_scroll_pos_for_line(int p_line, int p_wrap_index) c
 void TextremeTextEdit::set_line_as_first_visible(int p_line, int p_wrap_index) {
 
 	set_v_scroll(get_scroll_pos_for_line(p_line, p_wrap_index));
-	emit_signal("on_v_scroll_changed", get_v_scroll_px());
 }
 
 void TextremeTextEdit::set_line_as_center_visible(int p_line, int p_wrap_index) {
@@ -6727,7 +6723,6 @@ void TextremeTextEdit::set_line_as_center_visible(int p_line, int p_wrap_index) 
 	int first_line = p_line - num_lines_from_rows(p_line, p_wrap_index, -visible_rows / 2, wi) + 1;
 
 	set_v_scroll(get_scroll_pos_for_line(first_line, wi));
-	emit_signal("on_v_scroll_changed", get_v_scroll_px());
 }
 
 void TextremeTextEdit::set_line_as_last_visible(int p_line, int p_wrap_index) {
@@ -6736,7 +6731,6 @@ void TextremeTextEdit::set_line_as_last_visible(int p_line, int p_wrap_index) {
 	int first_line = p_line - num_lines_from_rows(p_line, p_wrap_index, -get_visible_rows() - 1, wi) + 1;
 
 	set_v_scroll(get_scroll_pos_for_line(first_line, wi) + get_visible_rows_offset());
-	emit_signal("on_v_scroll_changed", get_v_scroll_px());
 }
 
 int TextremeTextEdit::get_first_visible_line() const {
@@ -7437,6 +7431,26 @@ Array TextremeTextEdit::get_line_character_positions(int p_line) const {
 	}
 	return result;
 }
+
+int TextremeTextEdit::get_render_offset_px() {
+	int ofs_readonly = 0;
+	if (readonly) {
+		ofs_readonly = cache.style_readonly->get_offset().y / 2;
+	}
+
+	int ofs_y = (cache.line_spacing / 2) + ofs_readonly;
+	ofs_y -= cursor.wrap_ofs * get_row_height();
+	ofs_y -= get_v_scroll_offset() * get_row_height();
+
+	int line = get_first_visible_line();
+
+	for (int i = 0; i < line; ++i) {
+		ofs_y -= (times_line_wraps(i) + 1) * get_row_height();	
+	}
+
+	return ofs_y;
+}
+
 // Poolvector<Vector2> get_line_positions(int p_line) {
 
 // }
@@ -7592,6 +7606,8 @@ void TextremeTextEdit::_bind_methods() {
 	ClassDB::bind_method(D_METHOD("get_v_scroll_max_px"), &TextremeTextEdit::get_v_scroll_max_px);
 	ClassDB::bind_method(D_METHOD("set_v_scroll_enabled", "is_enabled"), &TextremeTextEdit::set_v_scroll_enabled);
 	ClassDB::bind_method(D_METHOD("update_ranges"), &TextremeTextEdit::update_ranges);
+	ClassDB::bind_method(D_METHOD("get_render_offset_px"), &TextremeTextEdit::get_render_offset_px);
+	
 	ClassDB::bind_method(D_METHOD("set_range_trigger_symbols", "new_trigger_symbols"), &TextremeTextEdit::set_range_trigger_symbols);
 
 	ADD_PROPERTY(PropertyInfo(Variant::STRING, "text", PROPERTY_HINT_MULTILINE_TEXT), "set_text", "get_text");
@@ -7637,6 +7653,7 @@ void TextremeTextEdit::_bind_methods() {
 	ADD_SIGNAL(MethodInfo("on_text_added", PropertyInfo(Variant::STRING, "added_text"), PropertyInfo(Variant::ARRAY, "text_positions")));
 	ADD_SIGNAL(MethodInfo("on_v_scroll_changed", PropertyInfo(Variant::REAL, "new_value_px")));
 	ADD_SIGNAL(MethodInfo("on_v_scroll_visibility_changed", PropertyInfo(Variant::BOOL, "is_visible")));
+	ADD_SIGNAL(MethodInfo("on_render_offset_px_changed", PropertyInfo(Variant::REAL, "new_value_px")));
 
 	BIND_ENUM_CONSTANT(MENU_CUT);
 	BIND_ENUM_CONSTANT(MENU_COPY);
