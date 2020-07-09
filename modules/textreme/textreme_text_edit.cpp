@@ -6775,7 +6775,6 @@ void TextremeTextEdit::set_v_scroll_enabled(bool is_enabled) {
 		v_scroll->set_self_modulate(Color(1.0, 1.0, 1.0, 0.0));
 		v_scroll->set_mouse_filter(Control::MOUSE_FILTER_IGNORE);
 	}
-	is_v_scroll_enabled = false;
 }
 
 double TextremeTextEdit::get_v_scroll_offset() const {
@@ -7451,6 +7450,23 @@ int TextremeTextEdit::get_render_offset_px() {
 	return ofs_y;
 }
 
+Vector2 TextremeTextEdit::get_cursor_position_px() {
+
+	if (cursor_get_column() == 0) {
+		int height_in_lines = 0;
+		for(int i = 0; i < cursor_get_line(); ++i) {
+			height_in_lines += times_line_wraps(i) + 1;
+		}
+
+		int height_in_px = (height_in_lines + 1) * get_row_height();
+
+		return Vector2(0, height_in_px);		
+	}
+
+	Array positions = get_text_positions_piece(cursor_get_line(), cursor_get_column() - 1, cursor_get_line(), cursor_get_column());
+	return positions[0];
+}
+
 // Poolvector<Vector2> get_line_positions(int p_line) {
 
 // }
@@ -7607,7 +7623,7 @@ void TextremeTextEdit::_bind_methods() {
 	ClassDB::bind_method(D_METHOD("set_v_scroll_enabled", "is_enabled"), &TextremeTextEdit::set_v_scroll_enabled);
 	ClassDB::bind_method(D_METHOD("update_ranges"), &TextremeTextEdit::update_ranges);
 	ClassDB::bind_method(D_METHOD("get_render_offset_px"), &TextremeTextEdit::get_render_offset_px);
-	
+	ClassDB::bind_method(D_METHOD("get_cursor_position_px"), &TextremeTextEdit::get_cursor_position_px);
 	ClassDB::bind_method(D_METHOD("set_range_trigger_symbols", "new_trigger_symbols"), &TextremeTextEdit::set_range_trigger_symbols);
 
 	ADD_PROPERTY(PropertyInfo(Variant::STRING, "text", PROPERTY_HINT_MULTILINE_TEXT), "set_text", "get_text");

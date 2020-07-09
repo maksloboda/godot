@@ -417,7 +417,6 @@ private:
 	float target_v_scroll;
 	float v_scroll_speed;
 
-	bool is_v_scroll_enabled = true;
 	Vector<TextRegionInfo> hidden_text_regions;
 
 	String highlighted_word;
@@ -472,6 +471,7 @@ private:
 	int get_char_count();
 
 	int get_render_offset_px();
+	Vector2 get_cursor_position_px();
 
 	double get_scroll_pos_for_line(int p_line, int p_wrap_index = 0) const;
 	void set_line_as_first_visible(int p_line, int p_wrap_index = 0);
