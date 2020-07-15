@@ -4432,6 +4432,17 @@ Array TextremeTextEdit::get_text_positions_piece(int p_from_line, int p_from_col
 	return ret;
 }
 
+Array TextremeTextEdit::convert_local_to_global(Array p_positions) {
+	Array result;
+	for (int i = 0; i < p_positions.size(); ++i) {
+		Vector2 element = p_positions[i];
+		Transform2D transform =  Transform2D(0, element);
+		Transform2D composition = get_global_transform() * transform;
+		result.push_back(composition.get_origin());
+	}
+	return result;
+}
+
 void TextremeTextEdit::_remove_text(int p_from_line, int p_from_column, int p_to_line, int p_to_column) {
 
 	if (!setting_text && idle_detect->is_inside_tree())
@@ -7625,6 +7636,7 @@ void TextremeTextEdit::_bind_methods() {
 	ClassDB::bind_method(D_METHOD("get_render_offset_px"), &TextremeTextEdit::get_render_offset_px);
 	ClassDB::bind_method(D_METHOD("get_cursor_position_px"), &TextremeTextEdit::get_cursor_position_px);
 	ClassDB::bind_method(D_METHOD("set_range_trigger_symbols", "new_trigger_symbols"), &TextremeTextEdit::set_range_trigger_symbols);
+	ClassDB::bind_method(D_METHOD("convert_local_to_global", "positions"), &TextremeTextEdit::convert_local_to_global);
 
 	ADD_PROPERTY(PropertyInfo(Variant::STRING, "text", PROPERTY_HINT_MULTILINE_TEXT), "set_text", "get_text");
 	ADD_PROPERTY(PropertyInfo(Variant::BOOL, "readonly"), "set_readonly", "is_readonly");
