@@ -613,11 +613,11 @@ Array TextremeTextEdit::update_ranges() {
 				temp_answer.clear();
 				temp_hidden_regions.clear();
 
+				is_open = true;
+				last_symbol = p_current_char;
 				start_col = p_col;
 				start_row = p_row;
 				current_length = 1;
-				is_open = true;
-				last_symbol = p_current_char;
 				start_position = p_position;
 			}
 		}
@@ -656,6 +656,12 @@ Array TextremeTextEdit::update_ranges() {
 				int last_id = current_line_positions.size() - 1;
 				current_line_positions.push_back(current_line_positions[last_id]);
 			}
+		}
+
+		if (current_line_positions.size() != current_line.length()) {
+			ERR_PRINT("Line positions and line string have different sizes!");
+			start_offset += times_line_wraps(line_idx) + 1;
+			continue;
 		}
 
 		for(int chr_idx = 0; chr_idx < current_line.length(); ++chr_idx) {
@@ -1781,6 +1787,10 @@ void TextremeTextEdit::_notification(int p_what) {
 							eol_color.a = 1;
 							cache.folded_eol_icon->draw(ci, Point2(char_ofs + char_margin + xofs + ofs_x, ofs_y + yofs), eol_color);
 						}
+					}
+
+					for (int j_copy = j; j_copy < str.length(); j_copy++) {
+						char_position_in_line++;
 					}
 
 					if (cursor.column == (last_wrap_column + j) && cursor.line == line && cursor_wrap_index == line_wrap_index && (char_ofs + char_margin) >= xmargin_beg) {
