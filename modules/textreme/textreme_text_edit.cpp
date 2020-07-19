@@ -4445,6 +4445,7 @@ Array TextremeTextEdit::get_text_positions_piece(int p_from_line, int p_from_col
 Array TextremeTextEdit::convert_local_to_global(Array p_positions) {
 	Array result;
 	for (int i = 0; i < p_positions.size(); ++i) {
+		ERR_FAIL_COND_V_MSG(p_positions[i].get_type() != Variant::VECTOR2, Array(), "Cannot convert non Vector2 values.");
 		Vector2 element = p_positions[i];
 		Transform2D transform =  Transform2D(0, element);
 		Transform2D composition = get_global_transform() * transform;
@@ -7485,6 +7486,7 @@ Vector2 TextremeTextEdit::get_cursor_position_px() {
 	}
 
 	Array positions = get_text_positions_piece(cursor_get_line(), cursor_get_column() - 1, cursor_get_line(), cursor_get_column());
+	ERR_FAIL_COND_V_MSG(positions.empty(), Vector2(), "Failed to calculate mouse position, returned position array is empty.");
 	return positions[0];
 }
 
