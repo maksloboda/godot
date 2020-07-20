@@ -689,6 +689,8 @@ Array TextremeTextEdit::update_ranges() {
 		}
 	}
 
+	update();
+
 	return actual_answer;
 }
 
@@ -748,7 +750,7 @@ Array TextremeTextEdit::update_line_ranges(int p_line, int p_offset_lines) {
 
 		TextRegionInfo info;
 
-		info.row = p_row;
+		// info.row = p_row;
 		info.start_col = p_start_col;
 		info.end_col = p_end_col;
 
@@ -894,6 +896,8 @@ Array TextremeTextEdit::update_line_ranges(int p_line, int p_offset_lines) {
 		process_symbol(current_line, p_line, chr_idx, current_char, current_line_positions[chr_idx], prev_position);
 		prev_position = current_line_positions[chr_idx];
 	}
+
+	text.set_hidden_text_regions(p_line, actual_hidden_regions);
 
 	return actual_answer;
 }
@@ -1533,8 +1537,6 @@ void TextremeTextEdit::_notification(int p_what) {
 				}
 			}
 
-			int current_hidden_range_idx = 0;
-
 			// draw main text
 			int line = first_visible_line;
 			for (int i = 0; i < draw_amount; i++) {
@@ -1570,6 +1572,8 @@ void TextremeTextEdit::_notification(int p_what) {
 				int last_wrap_column = 0;
 				int char_position_in_line = 0;
 
+				int current_hidden_range_idx = 0;
+				const Vector<TextRegionInfo> &hidden_text_regions = text.get_hidden_text_regions(line);
 				for (int line_wrap_index = 0; line_wrap_index < line_wrap_amount + 1; line_wrap_index++) {
 					if (line_wrap_index != 0) {
 						i++;
@@ -1950,16 +1954,12 @@ void TextremeTextEdit::_notification(int p_what) {
 							while(current_hidden_range_idx < hidden_text_regions.size()) {
 								const TextRegionInfo &lower_bound_region = hidden_text_regions[current_hidden_range_idx];
 
-								if (lower_bound_region.row > line) {
-									break; // Found the lower bound for the region in lines
-								} else if (lower_bound_region.row == line) {
-									if (lower_bound_region.start_col > char_position_in_line) {
-										break; // Found the lower bound for the region in chars
-									} else if (lower_bound_region.start_col <= char_position_in_line &&
-											char_position_in_line <= lower_bound_region.end_col) {
-										is_char_inside_range = true;
-										break; // Found perfect bound;
-									}
+								if (lower_bound_region.start_col > char_position_in_line) {
+									break; // Found the lower bound for the region in chars
+								} else if (lower_bound_region.start_col <= char_position_in_line &&
+										char_position_in_line <= lower_bound_region.end_col) {
+									is_char_inside_range = true;
+									break; // Found perfect bound;
 								}
 
 								++current_hidden_range_idx;

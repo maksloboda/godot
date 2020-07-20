@@ -65,6 +65,10 @@ public:
 		}
 	};
 
+	struct TextRegionInfo {
+		int start_col, end_col;
+	};
+
 	class Text {
 	public:
 		struct ColorRegionInfo {
@@ -90,6 +94,7 @@ public:
 			Map<int, ColorRegionInfo> region_info;
 			Ref<Texture> info_icon;
 			Vector<int> owned_ranges;
+			Vector<TextRegionInfo> hidden_text_regions;
 			String info;
 			String data;
 			// Vector<Vector2> character_positions;
@@ -137,6 +142,8 @@ public:
 		bool is_safe(int p_line) const { return text[p_line].safe; }
 		bool are_ranges_dirty(int p_line) const { return text[p_line].are_ranges_dirty; }
 		void set_ranges_dirty(int p_line, bool p_is_dirty) { text.write[p_line].are_ranges_dirty = p_is_dirty; }
+		const Vector<TextRegionInfo> &get_hidden_text_regions(int p_line) const { return text[p_line].hidden_text_regions; }
+		void set_hidden_text_regions(int p_line, const Vector<TextRegionInfo> &p_value) { text.write[p_line].hidden_text_regions = p_value; }
 		// Vector<int> &get_owned_ranges(int p_line) { return text[p_line].owned_ranges; }
 		void set_info_icon(int p_line, Ref<Texture> p_icon, String p_info) {
 			if (p_icon.is_null()) {
@@ -163,10 +170,6 @@ public:
 	};
 
 private:
-
-	struct TextRegionInfo {
-		int row, start_col, end_col;
-	};
 
 	struct Cursor {
 		int last_fit_x;
@@ -422,7 +425,7 @@ private:
 	float target_v_scroll;
 	float v_scroll_speed;
 
-	Vector<TextRegionInfo> hidden_text_regions;
+	// Vector<TextRegionInfo> hidden_text_regions;
 
 	String highlighted_word;
 
