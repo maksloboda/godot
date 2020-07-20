@@ -144,7 +144,8 @@ public:
 		void set_ranges_dirty(int p_line, bool p_is_dirty) { text.write[p_line].are_ranges_dirty = p_is_dirty; }
 		const Vector<TextRegionInfo> &get_hidden_text_regions(int p_line) const { return text[p_line].hidden_text_regions; }
 		void set_hidden_text_regions(int p_line, const Vector<TextRegionInfo> &p_value) { text.write[p_line].hidden_text_regions = p_value; }
-		// Vector<int> &get_owned_ranges(int p_line) { return text[p_line].owned_ranges; }
+		const Vector<int> &get_owned_ranges(int p_line) { return text[p_line].owned_ranges; }
+		void set_owned_ranges(int p_line, const Vector<int> &p_value) { text.write[p_line].owned_ranges = p_value; }
 		void set_info_icon(int p_line, Ref<Texture> p_icon, String p_info) {
 			if (p_icon.is_null()) {
 				text.write[p_line].has_info = false;

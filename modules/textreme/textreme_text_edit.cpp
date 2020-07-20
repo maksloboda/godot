@@ -713,11 +713,19 @@ Array TextremeTextEdit::update_line_ranges(int p_line, int p_offset_lines) {
 
 	Vector<TextRegionInfo> temp_hidden_regions;
 	Vector<TextRegionInfo> actual_hidden_regions;
-
+	Vector<int> new_owned_ranges;
 	// Used in case current range is invalid
 	Array temp_answer;
 	// Used for completed ranges
 	Array actual_answer;
+
+	const Vector<int> &owned_ranges = text.get_owned_ranges(p_line);
+	for(int i = 0; i < owned_ranges.size(); ++i) {
+		Dictionary data;
+		data["operation"] = String("rem");
+		data["id"] = owned_ranges[i];
+		actual_answer.push_back(data);		
+	}
 
 	auto commit_to_temp_answer = [&](
 			const String &p_string,
@@ -739,6 +747,7 @@ Array TextremeTextEdit::update_line_ranges(int p_line, int p_offset_lines) {
 
 		Dictionary data;
 		data["operation"] = String("add");
+		data["id"] = new_unused_range_id++;
 		data["string"] = substring;
 
 		Vector2 actual_position = Vector2(
@@ -814,8 +823,8 @@ Array TextremeTextEdit::update_line_ranges(int p_line, int p_offset_lines) {
 				// Flush strings to answer
 				for (int i = 0; i < temp_answer.size(); ++i) {
 					actual_answer.push_back(temp_answer[i]);
+					new_owned_ranges.push_back(static_cast<Dictionary>(temp_answer[i])["id"]);
 				}
-
 
 				for (int i = 0; i < temp_hidden_regions.size(); ++i) {
 					actual_hidden_regions.push_back(temp_hidden_regions[i]);
@@ -898,6 +907,7 @@ Array TextremeTextEdit::update_line_ranges(int p_line, int p_offset_lines) {
 	}
 
 	text.set_hidden_text_regions(p_line, actual_hidden_regions);
+	text.set_owned_ranges(p_line, new_owned_ranges);
 
 	return actual_answer;
 }
