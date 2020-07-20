@@ -334,6 +334,7 @@ void TextremeTextEdit::Text::insert(int p_at, const String &p_text) {
 void TextremeTextEdit::Text::remove(int p_at) {
 
 	text.remove(p_at);
+	print_line(vformat("Removed line %d", p_at));
 }
 
 int TextremeTextEdit::Text::get_char_width(CharType c, CharType next_c, int px) const {
@@ -476,6 +477,225 @@ void TextremeTextEdit::_update_scrollbars() {
 
 // Returns Array of Dictionaries
 Array TextremeTextEdit::update_ranges() {
+	// // Current open range symbol
+	// String last_symbol = " ";
+	// // Is a range open right now
+	// bool is_open = false;
+	// // Start row of current open range
+	// int start_row = 0;
+	// // Start column of current open range
+	// int start_col = 0;
+	// // Current length of the range (invariat is described inside loop body)
+	// int current_length = 0;
+	// // Position of the first char's top left corner
+	// Vector2 start_position;
+
+	// Vector<TextRegionInfo> temp_hidden_regions;
+	// Vector<TextRegionInfo> actual_hidden_regions;
+
+	// // Used in case current range is invalid
+	// Array temp_answer;
+	// // Used for completed ranges
+	// Array actual_answer;
+
+	// auto commit_to_temp_answer = [&](
+	// 		const String &p_string,
+	// 		int p_start,
+	// 		int p_length,
+	// 		Vector2 p_position, 
+	// 		const String &p_type,
+	// 		int p_row,
+	// 		int p_start_col,
+	// 		int p_end_col) {
+
+		
+	// 	String substring = p_string.substr(p_start, p_length);
+		
+	// 	// No need to commit empty strings
+	// 	if (substring == "") {
+	// 		return;
+	// 	}
+
+	// 	Dictionary data;
+	// 	data["string"] = substring;
+
+	// 	Vector2 actual_position = Vector2(
+	// 		p_position.x - cache.font->get_char_size(substring[0]).x,
+	// 		(p_position.y - 1) * get_row_height());
+
+	// 	data["position"] = actual_position;
+	// 	data["type"] = p_type;
+
+	// 	TextRegionInfo info;
+
+	// 	info.row = p_row;
+	// 	info.start_col = p_start_col;
+	// 	info.end_col = p_end_col;
+
+	// 	temp_hidden_regions.push_back(info);
+	// 	temp_answer.push_back(data);
+	// };
+
+	// auto process_symbol = [&](
+	// 	const String &p_line,
+	// 	int p_row,
+	// 	int p_col,
+	// 	const String &p_current_char,
+	// 	Vector2 p_position,
+	// 	Vector2 p_prev_position) {
+
+	// 	// At the start of current iteration
+	// 	// if is_open then line.substr(start_col, current_length) is a string in [start_col:p_col]
+
+	// 	// Split current string on line end
+	// 	if (is_open && p_position.y != p_prev_position.y) {
+
+	// 		// Flush string to temp answer
+	// 		commit_to_temp_answer(p_line, start_col, current_length - 1, start_position,
+	// 				last_symbol, start_row, start_col, start_col + current_length - 2);
+
+	// 		start_col = p_col;
+	// 		start_row = p_row;
+	// 		current_length = 1;
+	// 		start_position = p_position;
+	// 	}
+
+	// 	// Split on tab character
+	// 	if (is_open && p_col > 0 && p_line[p_col - 1] == '\t' && p_line[p_col] != '\t') {
+			
+	// 		commit_to_temp_answer(p_line, start_col, current_length - 1, start_position,
+	// 				last_symbol, start_row, start_col, start_col + current_length - 2);
+
+	// 		start_col = p_col;
+	// 		start_row = p_row;
+	// 		current_length = 1;
+	// 		start_position = p_position;
+	// 	}
+
+	// 	//Check if current symbol is a range identifier
+	// 	if (range_trigger_symbols.find(p_current_char) != -1) {
+	// 		if (!is_open) {
+	// 			// Open a new range
+	// 			is_open = true;
+	// 			last_symbol = p_current_char;
+	// 			start_col = p_col;
+	// 			start_row = p_row;
+	// 			current_length = 1;
+	// 			start_position = p_position;
+	// 		} else if (last_symbol == p_current_char) {
+	// 			// Close current range
+
+	// 			// Flush string to temp answer
+	// 			commit_to_temp_answer(p_line, start_col, current_length, start_position,
+	// 					last_symbol, start_row, start_col, start_col + current_length - 1);
+
+	// 			// Flush strings to answer
+	// 			for (int i = 0; i < temp_answer.size(); ++i) {
+	// 				actual_answer.push_back(temp_answer[i]);
+	// 			}
+
+
+	// 			for (int i = 0; i < temp_hidden_regions.size(); ++i) {
+	// 				actual_hidden_regions.push_back(temp_hidden_regions[i]);
+	// 			}
+
+	// 			temp_answer.clear();
+	// 			temp_hidden_regions.clear();
+
+	// 			start_col = p_col;
+	// 			start_row = p_row;
+	// 			current_length = 0;
+	// 			is_open = false;
+	// 			start_position = Vector2();
+	// 		} else {
+	// 			// Destroy current range and begin a different one
+
+	// 			// Drop temp answer
+	// 			temp_answer.clear();
+	// 			temp_hidden_regions.clear();
+
+	// 			is_open = true;
+	// 			last_symbol = p_current_char;
+	// 			start_col = p_col;
+	// 			start_row = p_row;
+	// 			current_length = 1;
+	// 			start_position = p_position;
+	// 		}
+	// 	}
+
+	// 	// Split current string on line end
+	// 	if (is_open && p_col == (int)p_line.length() - 1) {
+	// 		// Flush current range on the last of the line
+	// 		commit_to_temp_answer(p_line, start_col, current_length, start_position,
+	// 				last_symbol, start_row, start_col, start_col + current_length - 1);
+			
+	// 		current_length = 0;
+	// 		start_col = 0;
+	// 		start_row = p_row;
+	// 		start_position = p_position;
+	// 	}
+
+	// 	++current_length;
+	// };
+
+
+	// // Offset in lines
+	// int start_offset = 1;
+	// Vector2 prev_position = Vector2(0, 1);
+
+	// // Go though every line
+	// for(int line_idx = 0; line_idx < (int)text.size(); ++line_idx) {
+	// 	Vector<Vector2> current_line_positions = get_wrap_rows_character_positions(line_idx, start_offset);
+	// 	String current_line = text[line_idx];
+
+	// 	// Add new line
+	// 	if (line_idx != (int)text.size() - 1) {
+	// 		current_line += '\n';
+	// 		if (current_line_positions.empty()) {
+	// 			current_line_positions.push_back(Vector2(0, start_offset));
+	// 		} else {
+	// 			int last_id = current_line_positions.size() - 1;
+	// 			current_line_positions.push_back(current_line_positions[last_id]);
+	// 		}
+	// 	}
+
+	// 	if (current_line_positions.size() != current_line.length()) {
+	// 		ERR_PRINT("Line positions and line string have different sizes!");
+	// 		start_offset += times_line_wraps(line_idx) + 1;
+	// 		continue;
+	// 	}
+
+	// 	for(int chr_idx = 0; chr_idx < current_line.length(); ++chr_idx) {
+	// 		String current_char = current_line.substr(chr_idx, 1);
+
+	// 		process_symbol(current_line, line_idx, chr_idx, current_char, current_line_positions[chr_idx], prev_position);
+	// 		prev_position = current_line_positions[chr_idx];
+	// 	}
+	// 	start_offset += times_line_wraps(line_idx) + 1;
+	// }
+
+	// hidden_text_regions = actual_hidden_regions;
+	// update();
+
+	Array actual_answer;
+
+	int line_offset = 1;
+	for (int i = 0; i < text.size(); ++i) {
+		Array commands = update_line_ranges(i, line_offset);
+		line_offset += times_line_wraps(i) + 1;
+
+		for (int element = 0; element < commands.size(); ++element) {
+			actual_answer.push_back(commands[element]);
+		}
+	}
+
+	return actual_answer;
+}
+
+// Returns Array of Dictionaries
+Array TextremeTextEdit::update_line_ranges(int p_line, int p_offset_lines) {
+	ERR_FAIL_INDEX_V_MSG(p_line, text.size(), Array(), "Invalid line range update requested.");
+
 	// Current open range symbol
 	String last_symbol = " ";
 	// Is a range open right now
@@ -516,6 +736,7 @@ Array TextremeTextEdit::update_ranges() {
 		}
 
 		Dictionary data;
+		data["operation"] = String("add");
 		data["string"] = substring;
 
 		Vector2 actual_position = Vector2(
@@ -637,44 +858,42 @@ Array TextremeTextEdit::update_ranges() {
 		++current_length;
 	};
 
-
 	// Offset in lines
-	int start_offset = 1;
+	int offset = 0;
 	Vector2 prev_position = Vector2(0, 1);
 
-	// Go though every line
-	for(int line_idx = 0; line_idx < (int)text.size(); ++line_idx) {
-		Vector<Vector2> current_line_positions = get_wrap_rows_character_positions(line_idx, start_offset);
-		String current_line = text[line_idx];
-
-		// Add new line
-		if (line_idx != (int)text.size() - 1) {
-			current_line += '\n';
-			if (current_line_positions.empty()) {
-				current_line_positions.push_back(Vector2(0, start_offset));
-			} else {
-				int last_id = current_line_positions.size() - 1;
-				current_line_positions.push_back(current_line_positions[last_id]);
-			}
+	if (p_offset_lines < 0) {
+		for(int i = 0; i < p_line; ++i) {
+			offset += times_line_wraps(i) + 1;	
 		}
-
-		if (current_line_positions.size() != current_line.length()) {
-			ERR_PRINT("Line positions and line string have different sizes!");
-			start_offset += times_line_wraps(line_idx) + 1;
-			continue;
-		}
-
-		for(int chr_idx = 0; chr_idx < current_line.length(); ++chr_idx) {
-			String current_char = current_line.substr(chr_idx, 1);
-
-			process_symbol(current_line, line_idx, chr_idx, current_char, current_line_positions[chr_idx], prev_position);
-			prev_position = current_line_positions[chr_idx];
-		}
-		start_offset += times_line_wraps(line_idx) + 1;
+	} else {
+		offset = p_offset_lines;
 	}
 
-	hidden_text_regions = actual_hidden_regions;
-	update();
+	
+	Vector<Vector2> current_line_positions = get_wrap_rows_character_positions(p_line, offset);
+	String current_line = text[p_line];
+
+	// Add new line
+	if (p_line != (int)text.size() - 1) {
+		current_line += '\n';
+		if (current_line_positions.empty()) {
+			current_line_positions.push_back(Vector2(0, offset));
+		} else {
+			int last_id = current_line_positions.size() - 1;
+			current_line_positions.push_back(current_line_positions[last_id]);
+		}
+	}
+
+	ERR_FAIL_COND_V_MSG(current_line_positions.size() != current_line.length(), Array(), 
+		"Line positions and line string have different sizes!");
+
+	for(int chr_idx = 0; chr_idx < current_line.length(); ++chr_idx) {
+		String current_char = current_line.substr(chr_idx, 1);
+
+		process_symbol(current_line, p_line, chr_idx, current_char, current_line_positions[chr_idx], prev_position);
+		prev_position = current_line_positions[chr_idx];
+	}
 
 	return actual_answer;
 }
@@ -7844,6 +8063,8 @@ TextremeTextEdit::TextremeTextEdit() {
 	set_readonly(false);
 	menu->connect("id_pressed", this, "menu_option");
 	first_draw = true;
+
+	new_unused_range_id = 0;
 
 	executing_line = -1;
 }

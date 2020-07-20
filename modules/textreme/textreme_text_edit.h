@@ -85,9 +85,11 @@ public:
 			bool hidden : 1;
 			bool safe : 1;
 			bool has_info : 1;
+			bool are_ranges_dirty : 1;
 			int wrap_amount_cache : 24;
 			Map<int, ColorRegionInfo> region_info;
 			Ref<Texture> info_icon;
+			Vector<int> owned_ranges;
 			String info;
 			String data;
 			// Vector<Vector2> character_positions;
@@ -133,6 +135,9 @@ public:
 		bool is_hidden(int p_line) const { return text[p_line].hidden; }
 		void set_safe(int p_line, bool p_safe) { text.write[p_line].safe = p_safe; }
 		bool is_safe(int p_line) const { return text[p_line].safe; }
+		bool are_ranges_dirty(int p_line) const { return text[p_line].are_ranges_dirty; }
+		void set_ranges_dirty(int p_line, bool p_is_dirty) { text.write[p_line].are_ranges_dirty = p_is_dirty; }
+		// Vector<int> &get_owned_ranges(int p_line) { return text[p_line].owned_ranges; }
 		void set_info_icon(int p_line, Ref<Texture> p_icon, String p_info) {
 			if (p_icon.is_null()) {
 				text.write[p_line].has_info = false;
@@ -452,6 +457,9 @@ private:
 
 	String range_trigger_symbols;
 
+	Vector<int> deleted_ranges;
+	int new_unused_range_id;
+
 	void _generate_context_menu();
 
 	int get_visible_rows() const;
@@ -465,6 +473,7 @@ private:
 	int times_line_wraps(int line) const;
 	Vector<String> get_wrap_rows_text(int p_line) const;
 	Vector<Vector2> get_wrap_rows_character_positions(int p_line, int pre_y_offset) const;
+	Array update_line_ranges(int p_line, int p_offset_lines);
 	Array get_line_character_positions(int p_line) const;
 	int get_cursor_wrap_index() const;
 	int get_line_wrap_index_at_col(int p_line, int p_column) const;
