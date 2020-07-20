@@ -315,6 +315,7 @@ void TextremeTextEdit::Text::set(int p_line, const String &p_text) {
 	text.write[p_line].width_cache = -1;
 	text.write[p_line].wrap_amount_cache = -1;
 	text.write[p_line].data = p_text;
+	text.write[p_line].are_ranges_dirty = true;
 }
 
 void TextremeTextEdit::Text::insert(int p_at, const String &p_text) {
@@ -330,11 +331,17 @@ void TextremeTextEdit::Text::insert(int p_at, const String &p_text) {
 	line.wrap_amount_cache = -1;
 	line.data = p_text;
 	text.insert(p_at, line);
+	text.write[p_at].are_ranges_dirty = true;
 }
 void TextremeTextEdit::Text::remove(int p_at) {
+	
+	const Vector<int> &owned_ranges = get_owned_ranges(p_at);
+
+	for (int i = 0; i < owned_ranges.size(); ++i) {
+		deleted_ranges.push_back(owned_ranges[i]);
+	}
 
 	text.remove(p_at);
-	print_line(vformat("Removed line %d", p_at));
 }
 
 int TextremeTextEdit::Text::get_char_width(CharType c, CharType next_c, int px) const {
@@ -676,17 +683,33 @@ Array TextremeTextEdit::update_ranges() {
 
 	// hidden_text_regions = actual_hidden_regions;
 	// update();
-
+	
 	Array actual_answer;
+
+	auto deleted_ranges = text.get_deleted_ranges();
+
+	for (int i = 0; i < deleted_ranges.size(); ++i) {
+		Dictionary data;
+		data["operation"] = String("rem");
+		data["id"] = deleted_ranges[i];
+		actual_answer.push_back(data);
+	}
+
+	text.set_deleted_ranges(Vector<int>());
 
 	int line_offset = 1;
 	for (int i = 0; i < text.size(); ++i) {
-		Array commands = update_line_ranges(i, line_offset);
-		line_offset += times_line_wraps(i) + 1;
+		// print_line(vformat("Line %d is %d", i, (int)text.get_are_ranges_dirty(i)));
+		if (text.get_are_ranges_dirty(i)) {
+			text.set_are_ranges_dirty(i, false);
+		
+			Array commands = update_line_ranges(i, line_offset);	
 
-		for (int element = 0; element < commands.size(); ++element) {
-			actual_answer.push_back(commands[element]);
+			for (int element = 0; element < commands.size(); ++element) {
+				actual_answer.push_back(commands[element]);
+			}
 		}
+		line_offset += times_line_wraps(i) + 1;
 	}
 
 	update();
@@ -724,7 +747,7 @@ Array TextremeTextEdit::update_line_ranges(int p_line, int p_offset_lines) {
 		Dictionary data;
 		data["operation"] = String("rem");
 		data["id"] = owned_ranges[i];
-		actual_answer.push_back(data);		
+		actual_answer.push_back(data);
 	}
 
 	auto commit_to_temp_answer = [&](

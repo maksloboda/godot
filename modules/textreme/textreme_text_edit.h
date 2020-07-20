@@ -106,6 +106,7 @@ public:
 				hidden = false;
 				safe = false;
 				has_info = false;
+				are_ranges_dirty = false;
 				wrap_amount_cache = 0;
 			}
 		};
@@ -113,6 +114,7 @@ public:
 	private:
 		const Vector<ColorRegion> *color_regions;
 		mutable Vector<Line> text;
+		Vector<int> deleted_ranges;
 		Ref<Font> font;
 		int indent_size;
 
@@ -140,11 +142,13 @@ public:
 		bool is_hidden(int p_line) const { return text[p_line].hidden; }
 		void set_safe(int p_line, bool p_safe) { text.write[p_line].safe = p_safe; }
 		bool is_safe(int p_line) const { return text[p_line].safe; }
-		bool are_ranges_dirty(int p_line) const { return text[p_line].are_ranges_dirty; }
-		void set_ranges_dirty(int p_line, bool p_is_dirty) { text.write[p_line].are_ranges_dirty = p_is_dirty; }
+		bool get_are_ranges_dirty(int p_line) const { return text[p_line].are_ranges_dirty; }
+		void set_are_ranges_dirty(int p_line, bool p_is_dirty) { text.write[p_line].are_ranges_dirty = p_is_dirty; }
 		const Vector<TextRegionInfo> &get_hidden_text_regions(int p_line) const { return text[p_line].hidden_text_regions; }
 		void set_hidden_text_regions(int p_line, const Vector<TextRegionInfo> &p_value) { text.write[p_line].hidden_text_regions = p_value; }
 		const Vector<int> &get_owned_ranges(int p_line) { return text[p_line].owned_ranges; }
+		const Vector<int> &get_deleted_ranges() const { return deleted_ranges; }
+		void set_deleted_ranges(const Vector<int> &p_value) { deleted_ranges = p_value; }
 		void set_owned_ranges(int p_line, const Vector<int> &p_value) { text.write[p_line].owned_ranges = p_value; }
 		void set_info_icon(int p_line, Ref<Texture> p_icon, String p_info) {
 			if (p_icon.is_null()) {
@@ -461,7 +465,6 @@ private:
 
 	String range_trigger_symbols;
 
-	Vector<int> deleted_ranges;
 	int new_unused_range_id;
 
 	void _generate_context_menu();
