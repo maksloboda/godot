@@ -482,6 +482,13 @@ void TextremeTextEdit::_update_scrollbars() {
 // 	disabled_text_regions = new_value;
 // }
 
+Array TextremeTextEdit::force_update_ranges() {
+	for (int i = 0; i < text.size(); ++i) {
+		text.set_are_ranges_dirty(i, true);
+	}
+	return update_ranges();
+}
+
 // Returns Array of Dictionaries
 Array TextremeTextEdit::update_ranges() {
 	// // Current open range symbol
@@ -697,6 +704,10 @@ Array TextremeTextEdit::update_ranges() {
 
 	text.set_deleted_ranges(Vector<int>());
 
+	bool updated_before = false;
+	Dictionary displacement_data;
+	displacement_data["operation"] = String("mov");
+
 	int line_offset = 1;
 	for (int i = 0; i < text.size(); ++i) {
 		// print_line(vformat("Line %d is %d", i, (int)text.get_are_ranges_dirty(i)));
@@ -708,9 +719,20 @@ Array TextremeTextEdit::update_ranges() {
 			for (int element = 0; element < commands.size(); ++element) {
 				actual_answer.push_back(commands[element]);
 			}
+
+			updated_before = true;
+		} else if (updated_before) {
+
+			const Vector<int> &owned = text.get_owned_ranges(i);
+			for (int j = 0; j < owned.size(); ++j) {
+				displacement_data[owned[j]] = line_offset * get_row_height();
+			}
 		}
+
 		line_offset += times_line_wraps(i) + 1;
 	}
+
+	actual_answer.append(displacement_data);
 
 	update();
 
@@ -750,6 +772,18 @@ Array TextremeTextEdit::update_line_ranges(int p_line, int p_offset_lines) {
 		actual_answer.push_back(data);
 	}
 
+	// Offset in lines
+	int offset = 0;
+	Vector2 prev_position = Vector2(0, 1);
+
+	if (p_offset_lines < 0) {
+		for(int i = 0; i < p_line; ++i) {
+			offset += times_line_wraps(i) + 1;	
+		}
+	} else {
+		offset = p_offset_lines;
+	}
+
 	auto commit_to_temp_answer = [&](
 			const String &p_string,
 			int p_start,
@@ -775,8 +809,9 @@ Array TextremeTextEdit::update_line_ranges(int p_line, int p_offset_lines) {
 
 		Vector2 actual_position = Vector2(
 			p_position.x - cache.font->get_char_size(substring[0]).x,
-			(p_position.y - 1) * get_row_height());
+			(p_position.y - 1 - offset) * get_row_height());
 
+		data["offset"] = offset * get_row_height();
 		data["position"] = actual_position;
 		data["type"] = p_type;
 
@@ -891,18 +926,6 @@ Array TextremeTextEdit::update_line_ranges(int p_line, int p_offset_lines) {
 
 		++current_length;
 	};
-
-	// Offset in lines
-	int offset = 0;
-	Vector2 prev_position = Vector2(0, 1);
-
-	if (p_offset_lines < 0) {
-		for(int i = 0; i < p_line; ++i) {
-			offset += times_line_wraps(i) + 1;	
-		}
-	} else {
-		offset = p_offset_lines;
-	}
 
 	
 	Vector<Vector2> current_line_positions = get_wrap_rows_character_positions(p_line, offset);
@@ -7897,6 +7920,7 @@ void TextremeTextEdit::_bind_methods() {
 	ClassDB::bind_method(D_METHOD("get_v_scroll_max_px"), &TextremeTextEdit::get_v_scroll_max_px);
 	ClassDB::bind_method(D_METHOD("set_v_scroll_enabled", "is_enabled"), &TextremeTextEdit::set_v_scroll_enabled);
 	ClassDB::bind_method(D_METHOD("update_ranges"), &TextremeTextEdit::update_ranges);
+	ClassDB::bind_method(D_METHOD("force_update_ranges"), &TextremeTextEdit::force_update_ranges);
 	ClassDB::bind_method(D_METHOD("get_render_offset_px"), &TextremeTextEdit::get_render_offset_px);
 	ClassDB::bind_method(D_METHOD("get_cursor_position_px"), &TextremeTextEdit::get_cursor_position_px);
 	ClassDB::bind_method(D_METHOD("set_range_trigger_symbols", "new_trigger_symbols"), &TextremeTextEdit::set_range_trigger_symbols);

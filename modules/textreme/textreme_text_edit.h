@@ -512,6 +512,7 @@ private:
 	void _click_selection_held();
 
 	Array update_ranges();
+	Array force_update_ranges();
 
 	void set_range_trigger_symbols(String p_trigger_symbols);
 
