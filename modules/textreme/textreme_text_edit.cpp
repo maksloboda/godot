@@ -962,6 +962,14 @@ void TextremeTextEdit::set_range_trigger_symbols(String p_trigger_symbols) {
 	range_trigger_symbols = p_trigger_symbols;
 }
 
+void TextremeTextEdit::_emit_text_added(String text, Array positions) {
+	emit_signal("on_text_added", text, positions);
+}
+
+void TextremeTextEdit::_emit_text_removed(String text, Array positions) {
+	emit_signal("on_text_removed", text, positions);
+}
+
 void TextremeTextEdit::_click_selection_held() {
 
 	// Warning: is_mouse_button_pressed(BUTTON_LEFT) returns false for double+ clicks, so this doesn't work for MODE_WORD
@@ -4631,7 +4639,7 @@ void TextremeTextEdit::_insert_text(int p_line, int p_char, const String &p_text
 	Array positions = get_text_positions_piece(p_line, p_char, retline, retchar);
 	String parced_text = _base_get_text(p_line, p_char, retline, retchar);
 
-	emit_signal("on_text_added", parced_text, positions);
+	_emit_text_added(parced_text, positions);
 
 	if (r_end_line)
 		*r_end_line = retline;
@@ -4736,7 +4744,7 @@ void TextremeTextEdit::_remove_text(int p_from_line, int p_from_column, int p_to
 
 	String text = _base_get_text(p_from_line, p_from_column, p_to_line, p_to_column);
 	Array text_positions = get_text_positions_piece(p_from_line, p_from_column, p_to_line, p_to_column);
-	emit_signal("on_text_removed", text, text_positions);
+	_emit_text_removed(text, text_positions);
 	if (undo_enabled) {
 		_clear_redo();
 	}
@@ -6753,14 +6761,14 @@ void TextremeTextEdit::_do_text_op(const TextOperation &p_op, bool p_reverse) {
 		Array positions = get_text_positions_piece(p_op.from_line, p_op.from_column, check_line, check_column);
 		String parced_text = _base_get_text(p_op.from_line, p_op.from_column, check_line, check_column);
 
-		emit_signal("on_text_added", parced_text, positions);
+		_emit_text_added(parced_text, positions);
 
 	} else {
 
 		Array positions = get_text_positions_piece(p_op.from_line, p_op.from_column, p_op.to_line, p_op.to_column);
 		String parced_text = _base_get_text(p_op.from_line, p_op.from_column, p_op.to_line, p_op.to_column);
 
-		emit_signal("on_text_removed", parced_text, positions);
+		_emit_text_removed(parced_text, positions);
 
 
 		_base_remove_text(p_op.from_line, p_op.from_column, p_op.to_line, p_op.to_column);

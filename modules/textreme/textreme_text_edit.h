@@ -516,6 +516,9 @@ private:
 
 	void set_range_trigger_symbols(String p_trigger_symbols);
 
+	void _emit_text_added(String text, Array positions);
+	void _emit_text_removed(String text, Array positions);
+
 	void _update_selection_mode_pointer();
 	void _update_selection_mode_word();
 	void _update_selection_mode_line();
