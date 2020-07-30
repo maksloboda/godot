@@ -7934,6 +7934,9 @@ void TextremeTextEdit::_bind_methods() {
 	ClassDB::bind_method(D_METHOD("set_range_trigger_symbols", "new_trigger_symbols"), &TextremeTextEdit::set_range_trigger_symbols);
 	ClassDB::bind_method(D_METHOD("convert_local_to_global", "positions"), &TextremeTextEdit::convert_local_to_global);
 
+	ClassDB::bind_method(D_METHOD("is_insert_mode"), &TextremeTextEdit::is_insert_mode);
+	ClassDB::bind_method(D_METHOD("set_insert_mode"), &TextremeTextEdit::set_insert_mode);
+
 	ADD_PROPERTY(PropertyInfo(Variant::STRING, "text", PROPERTY_HINT_MULTILINE_TEXT), "set_text", "get_text");
 	ADD_PROPERTY(PropertyInfo(Variant::BOOL, "readonly"), "set_readonly", "is_readonly");
 	ADD_PROPERTY(PropertyInfo(Variant::BOOL, "highlight_current_line"), "set_highlight_current_line", "is_highlight_current_line_enabled");
