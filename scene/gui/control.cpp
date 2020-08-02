@@ -1342,7 +1342,19 @@ Rect2 Control::get_parent_anchorable_rect() const {
 	if (data.parent_canvas_item) {
 		parent_rect = data.parent_canvas_item->get_anchorable_rect();
 	} else {
-		parent_rect = get_viewport()->get_visible_rect();
+		Rect2 viewport_rect = get_viewport()->get_visible_rect();
+
+		auto get_correct_value = [&](float value) {
+			if (Math::is_nan(value) || Math::is_inf(value)) {
+				return 0.0f;
+			}
+			return value;
+		};
+		parent_rect.position.x = get_correct_value(viewport_rect.position.x);
+		parent_rect.position.y = get_correct_value(viewport_rect.position.y);
+		parent_rect.size.x = get_correct_value(viewport_rect.size.x);
+		parent_rect.size.y = get_correct_value(viewport_rect.size.y);
+
 	}
 
 	return parent_rect;
