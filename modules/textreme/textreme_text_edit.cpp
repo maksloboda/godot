@@ -4919,7 +4919,7 @@ void TextremeTextEdit::adjust_viewport_to_cursor() {
 	int last_vis_line = get_last_visible_line();
 	int last_vis_wrap = get_last_visible_line_wrap_index();
 
-	const int max_dist = 2;
+	const int &max_dist = bottom_scroll_offset;
 	if (cur_line < first_vis_line || (cur_line == first_vis_line && cur_wrap < first_vis_wrap)) {
 		// Cursor is above screen.
 		set_line_as_first_visible(cur_line, cur_wrap);
@@ -7144,6 +7144,14 @@ void TextremeTextEdit::set_h_scroll(int p_scroll) {
 	h_scroll->set_value(p_scroll);
 }
 
+void TextremeTextEdit::set_bottom_scroll_offset(int p_bottom_scroll_offset) {
+	bottom_scroll_offset = p_bottom_scroll_offset;
+}
+
+int TextremeTextEdit::get_bottom_scroll_offset() const {
+	return bottom_scroll_offset;
+}
+
 void TextremeTextEdit::set_smooth_scroll_enabled(bool p_enable) {
 
 	v_scroll->set_smooth_scroll_enabled(p_enable);
@@ -7951,6 +7959,8 @@ void TextremeTextEdit::_bind_methods() {
 	ClassDB::bind_method(D_METHOD("get_cursor_position_px"), &TextremeTextEdit::get_cursor_position_px);
 	ClassDB::bind_method(D_METHOD("set_range_trigger_symbols", "new_trigger_symbols"), &TextremeTextEdit::set_range_trigger_symbols);
 	ClassDB::bind_method(D_METHOD("convert_local_to_global", "positions"), &TextremeTextEdit::convert_local_to_global);
+	ClassDB::bind_method(D_METHOD("set_bottom_scroll_offset", "value"), &TextremeTextEdit::set_bottom_scroll_offset);
+	ClassDB::bind_method(D_METHOD("get_bottom_scroll_offset"), &TextremeTextEdit::get_bottom_scroll_offset);
 
 	ClassDB::bind_method(D_METHOD("is_insert_mode"), &TextremeTextEdit::is_insert_mode);
 	ClassDB::bind_method(D_METHOD("set_insert_mode"), &TextremeTextEdit::set_insert_mode);
@@ -7975,7 +7985,8 @@ void TextremeTextEdit::_bind_methods() {
 	ADD_PROPERTY(PropertyInfo(Variant::BOOL, "wrap_enabled"), "set_wrap_enabled", "is_wrap_enabled");
 	ADD_PROPERTY(PropertyInfo(Variant::REAL, "scroll_vertical"), "set_v_scroll", "get_v_scroll");
 	ADD_PROPERTY(PropertyInfo(Variant::INT, "scroll_horizontal"), "set_h_scroll", "get_h_scroll");
-
+	ADD_PROPERTY(PropertyInfo(Variant::INT, "bottom_scroll_offset", PROPERTY_HINT_RANGE, "1,100,1"), "set_bottom_scroll_offset", "get_bottom_scroll_offset");
+	
 	ADD_GROUP("Minimap", "minimap_");
 	ADD_PROPERTY(PropertyInfo(Variant::BOOL, "minimap_draw"), "draw_minimap", "is_drawing_minimap");
 	ADD_PROPERTY(PropertyInfo(Variant::INT, "minimap_width"), "set_minimap_width", "get_minimap_width");
@@ -8026,6 +8037,7 @@ TextremeTextEdit::TextremeTextEdit() {
 	clear();
 	wrap_enabled = false;
 	wrap_at = 0;
+	bottom_scroll_offset = 1;
 	wrap_right_offset = 10;
 	set_focus_mode(FOCUS_ALL);
 	syntax_highlighter = NULL;

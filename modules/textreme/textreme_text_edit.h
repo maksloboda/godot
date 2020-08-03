@@ -384,6 +384,8 @@ private:
 	int wrap_at;
 	int wrap_right_offset;
 
+	int bottom_scroll_offset;
+
 	bool first_draw;
 	bool setting_row;
 	bool draw_tabs;
@@ -793,6 +795,9 @@ public:
 	// void _on_v_scroll_changed(double new_value);
 	void set_v_scroll(double p_scroll);
 	void set_v_scroll_px(double p_scroll_px);
+
+	void set_bottom_scroll_offset(int p_bottom_scroll_offset);
+	int get_bottom_scroll_offset() const;
 
 	int get_h_scroll() const;
 	void set_h_scroll(int p_scroll);
