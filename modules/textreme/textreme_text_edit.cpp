@@ -4919,12 +4919,30 @@ void TextremeTextEdit::adjust_viewport_to_cursor() {
 	int last_vis_line = get_last_visible_line();
 	int last_vis_wrap = get_last_visible_line_wrap_index();
 
+	const int max_dist = 2;
 	if (cur_line < first_vis_line || (cur_line == first_vis_line && cur_wrap < first_vis_wrap)) {
 		// Cursor is above screen.
 		set_line_as_first_visible(cur_line, cur_wrap);
 	} else if (cur_line > last_vis_line || (cur_line == last_vis_line && cur_wrap >= last_vis_wrap)) {
 		// Cursor is below screen.
-		set_line_as_last_visible(cur_line, cur_wrap);
+		set_line_as_last_visible(cur_line, cur_wrap + max_dist - 1);
+	} else {
+		// Check if cursor is too close to bottom edge
+		int height = -cur_wrap;
+
+		for (int i = cur_line; i < last_vis_line; ++i) {
+			height += 1 + times_line_wraps(i);
+		}
+
+		height += 1 + last_vis_wrap;
+
+		
+		if (height >= 0 && height <= max_dist) {
+			int left = max_dist - height;
+			
+			set_line_as_last_visible(last_vis_line, last_vis_wrap + left);
+		}
+
 	}
 
 	int visible_width = get_size().width - cache.style_normal->get_minimum_size().width - cache.line_number_w - cache.breakpoint_gutter_width - cache.fold_gutter_width - cache.info_gutter_width - cache.minimap_width;
